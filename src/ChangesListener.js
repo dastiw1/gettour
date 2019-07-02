@@ -6,23 +6,13 @@
 import { showError } from './utils';
 
 export function __isNativeEvent(event) {
-  const defaultEvents = [
-    'click',
-    'mouseover',
-    'mouseout',
-    'keyup',
-    'keypress',
-    'change',
-    'focus',
-    'submit'
-  ];
+  const defaultEvents = ['click', 'mouseover', 'mouseout', 'keyup', 'keypress', 'change', 'focus', 'submit'];
+
   return defaultEvents.indexOf(event) > -1;
 }
 
 class ChangesListener {
-  constructor({
-    listener_id, selector, event, attributeName
-  }) {
+  constructor({ listener_id, selector, event, attributeName }) {
     this.__tourObject = null;
     this.listener_id = listener_id;
     this.selector = selector;
@@ -76,6 +66,7 @@ class ChangesListener {
     if (isBody === false) {
       let observer;
       let callback;
+
       switch (event) {
         case 'show':
           callback = this.IntersectionShowCallback;
@@ -154,6 +145,7 @@ class ChangesListener {
    */
   disconnectListener() {
     const listener = this.tourJs.__observers[this.listener_id];
+
     if (!listener) {
       showError(`Listener с id ${this.listener_id} не найден`);
       return;

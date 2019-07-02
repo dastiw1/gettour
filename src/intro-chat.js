@@ -67,7 +67,7 @@
       /* Padding to add after scrolling when element is not in the viewport (in pixels) */
       scrollPadding: 30,
       /* Set the overlay opacity */
-      overlayOpacity: 0.8,
+      overlayOpacity: 0.9,
       /* Precedence of positions, when auto is enabled */
       positionPrecedence: ['bottom', 'top', 'right', 'left'],
       /* Disable an interaction with element? */
