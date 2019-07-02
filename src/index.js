@@ -58,7 +58,7 @@ function isMessageFromWidget(event) {
 }
 
 const onboarding = {
-  stylesFilePath: 'http://localhost:3000/gettour-styles.css',
+  stylesFilePath: 'https://cdn.jsdelivr.net/npm/gettour/dist/gettour.min.js',
   selector: '.getchat-widget__frame',
   expandClass: 'getchat-widget--expanded',
   active: false,
@@ -71,15 +71,20 @@ const onboarding = {
   setOptions,
   stylesLoaded: false,
   __observers: {},
+  options: {
+    env: 'production'
+  },
 
   /**
    *
    * @param {string} hash
+   * @param {object} options
    */
-  init(hash) {
+  init(hash, options = {}) {
     const self = this;
 
     this.hash = hash;
+    this.options = Object.assign(this.options, options);
     this.loadWidgetData().then(data => {
       this.domain = data.domain;
       this.active = data.widget_active;
@@ -349,8 +354,11 @@ const onboarding = {
     $icon.className = 'getchat-widget__icon--close';
   },
   loadWidgetData() {
-    // const url = `https://getchat.me/api/the-bot/widget/${this.hash}/data`;
-    const url = `http://localhost:3000/api/the-bot/widget/${this.hash}/data`;
+    let url = `https://getchat.me/api/the-bot/widget/${this.hash}/data`;
+
+    if (this.options.env === 'development') {
+      url = url.replace('https://getchat.me', 'http://localhost:3000');
+    }
 
     return new Promise((resolve, reject) =>
       fetch(url, {
