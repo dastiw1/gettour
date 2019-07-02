@@ -1,7 +1,9 @@
+/* eslint-disable prefer-rest-params */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable camelcase */
 /* global window */
 /* global document */
+/* global history */
 import introJs from './intro-chat';
 
 import ChangesListener from './ChangesListener';
@@ -33,8 +35,8 @@ function isAnyPartOfElementInViewport(el) {
     bottom: boundsTop + el.clientHeight
   };
   return (
-    (bounds.bottom >= viewport.top && bounds.bottom <= viewport.bottom) ||
-    (bounds.top <= viewport.bottom && bounds.top >= viewport.top)
+    (bounds.bottom >= viewport.top && bounds.bottom <= viewport.bottom)
+    || (bounds.top <= viewport.bottom && bounds.top >= viewport.top)
   );
 }
 
@@ -58,7 +60,7 @@ const onboarding = {
   stylesFilePath: 'http://localhost:3000/gettour-styles.css',
   selector: '.getchat-widget__frame',
   expandClass: 'getchat-widget--expanded',
-  active: false, 
+  active: false,
   __intro: null,
   widgetHash: null,
   autoShowConditions: [],
@@ -75,17 +77,15 @@ const onboarding = {
   init(hash) {
     const self = this;
     this.hash = hash;
-    this.loadWidgetData().then(data => {
+    this.loadWidgetData().then((data) => {
       this.domain = data.domain;
       this.active = data.widget_active;
       this.autoShowConditions = data.conditions;
-      console.log('data', data);
-      if (this.domain !== location.host) {
+      if (this.domain !== window.location.host) {
         showError('[Ошибка] Виджет не для этого домена');
         return;
       }
-      console.log(this.active)
-      if(!this.active) {
+      if (!this.active) {
         return;
       }
       this.__intro = introJs();
@@ -115,21 +115,20 @@ const onboarding = {
       });
 
       // Слушать события выделения
-      window.addEventListener('message', event => {
+      window.addEventListener('message', (event) => {
         this.__listenForHighlightRequests.call(this, event);
       });
 
       // Слушать события кнопок чата
-      window.addEventListener('message', event => {
+      window.addEventListener('message', (event) => {
         this.__listenForActionClickedRequests.call(this, event);
       });
 
       // Слушать события для Observer-а
-      window.addEventListener('message', event => {
+      window.addEventListener('message', (event) => {
         this.__listenForObserveRequests.call(this, event);
       });
 
-      console.log(this.autoShowConditions);
       this.loadCondition();
 
       // Слущать изменение URL
@@ -139,7 +138,7 @@ const onboarding = {
     return this;
   },
   loadCondition() {
-    this.autoShowConditions.forEach(cond => {
+    this.autoShowConditions.forEach((cond) => {
       const regex = new RegExp(cond.urlRegex, 'i');
       if (regex.test(window.location.pathname)) {
         setTimeout(() => {
@@ -148,31 +147,28 @@ const onboarding = {
             this.loadStyles();
           }
           this.initEventListeners();
-          console.log('rendered');
         }, cond.timeInterval * 1000);
-        return;
       }
     });
   },
   listenForLocationChange() {
-    /* This modifies these three functions so that all fire a custom locationchange event for you to use,
+    /* This modifies these three functions so that all fire
+    a custom locationchange event for you to use,
     and also pushstate and replacestate events if you want to use those:
     From: https://stackoverflow.com/a/52809105/3939853 */
-    history.pushState = (f =>
-      function pushState() {
-        var ret = f.apply(this, arguments);
-        window.dispatchEvent(new Event('pushState'));
-        window.dispatchEvent(new Event('locationchange'));
-        return ret;
-      })(history.pushState);
+    history.pushState = (f => function pushState() {
+      const ret = f.apply(this, arguments);
+      window.dispatchEvent(new Event('pushState'));
+      window.dispatchEvent(new Event('locationchange'));
+      return ret;
+    })(history.pushState);
 
-    history.replaceState = (f =>
-      function replaceState() {
-        var ret = f.apply(this, arguments);
-        window.dispatchEvent(new Event('replaceState'));
-        window.dispatchEvent(new Event('locationchange'));
-        return ret;
-      })(history.replaceState);
+    history.replaceState = (f => function replaceState() {
+      const ret = f.apply(this, arguments);
+      window.dispatchEvent(new Event('replaceState'));
+      window.dispatchEvent(new Event('locationchange'));
+      return ret;
+    })(history.replaceState);
 
     window.addEventListener('popstate', () => {
       window.dispatchEvent(new Event('locationchange'));
@@ -181,9 +177,7 @@ const onboarding = {
     /**
      * Слушать изменение URL
      */
-    console.log('listen for hashchange');
-    window.addEventListener('locationchange', e => {
-      console.log('locationchange', location.href);
+    window.addEventListener('locationchange', () => {
       this.reset();
       this.loadCondition();
     });
@@ -257,7 +251,6 @@ const onboarding = {
         }
       });
     }
-    console.log(step);
     this.__intro.addStep(step);
 
     // Listen to event
@@ -301,10 +294,9 @@ const onboarding = {
   renderWidget(widgetUrl) {
     this.block = document.createElement('div');
     this.block.className = 'getchat-widget getchat-widget--expanded';
-    const widgetHtml =
-      '<button type="button" class="getchat-widget__btn--icon" >' +
-      '<i aria-hidden="true" class="getchat-widget__icon--close"></i></button>' +
-      `<iframe src="${widgetUrl}" class="getchat-widget__frame"></iframe>`;
+    const widgetHtml = '<button type="button" class="getchat-widget__btn--icon" >'
+      + '<i aria-hidden="true" class="getchat-widget__icon--close"></i></button>'
+      + `<iframe src="${widgetUrl}" class="getchat-widget__frame"></iframe>`;
 
     this.block.innerHTML = widgetHtml;
 
@@ -337,30 +329,27 @@ const onboarding = {
     $icon.className = 'getchat-widget__icon--close';
   },
   loadWidgetData() {
-    console.log('load...');
-    //const url = `https://getchat.me/api/the-bot/widget/${this.hash}/data`;
+    // const url = `https://getchat.me/api/the-bot/widget/${this.hash}/data`;
     const url = `http://localhost:3000/api/the-bot/widget/${this.hash}/data`;
 
-    return new Promise((resolve, reject) => {
-      return fetch(url, {
-        method: 'GET', // or 'PUT'
-        headers: {
-          'Content-Type': 'application/json'
+    return new Promise((resolve, reject) => fetch(url, {
+      method: 'GET', // or 'PUT'
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+      .then((res) => {
+        if (res.status === 200) {
+          return res.json();
         }
+        showError(`[Ошибка] ${res.statusText}`);
+        return {};
       })
-        .then(res => {
-          if (res.status === 200) {
-            return res.json();
-          } else {
-            showError(`[Ошибка] ${res.statusText}`);
-          }
-        })
-        .then(response => resolve(response))
-        .catch(error => {
-          showError(error);
-          reject(error);
-        });
-    });
+      .then(response => resolve(response))
+      .catch((error) => {
+        showError(error);
+        reject(error);
+      }));
   }
 };
 
