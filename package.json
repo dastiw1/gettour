@@ -5,7 +5,12 @@
   "main": "lib/gettour.js",
   "files": [
     "src",
-    "lib",
+    "lib/gettour.js",
+    "lib/gettour.min.js",
+    "lib/index.js",
+    "lib/gettour.js.map",
+    "lib/index.min.js.map",
+    "lib/index.js.map",
     "dist"
   ],
   "scripts": {
