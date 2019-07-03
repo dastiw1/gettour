@@ -30,5 +30,7 @@ node_modules
 # Remove some common IDE working directories
 .idea
 .vscode
-
 .DS_Store
+
+lib/*.map
+lib/index.min.js

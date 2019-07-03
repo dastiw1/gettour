@@ -1,11 +1,12 @@
 {
   "name": "gettour",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Getchat.me onboarding tour library that works with their autochats",
   "main": "lib/gettour.js",
   "files": [
     "src",
-    "lib"
+    "lib",
+    "dist"
   ],
   "scripts": {
     "build": "npm run build:css && webpack --env dev && webpack --env build && npm run test",
@@ -14,8 +15,8 @@
     "test:watch": "mocha --require babel-register --colors -w ./test/*.spec.js",
     "test:cover": "cross-env NODE_ENV=test nyc mocha --require babel-register --colors test/*.js",
     "repl": "node -i -e \"$(< ./lib/gettour.js)\"",
-    "scss": "node-sass -o lib/css src/scss/styles.scss",
-    "cssmin": "cleancss -o lib/css/styles.min.css lib/css/styles.css",
+    "scss": "node-sass -o dist/css src/scss/styles.scss",
+    "cssmin": "cleancss -o dist/css/styles.min.css dist/css/styles.css",
     "build:css": "npm run scss && npm run cssmin"
   },
   "repository": {

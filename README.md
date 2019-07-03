@@ -2,7 +2,20 @@
 
 Getchat.me onboarding tour library that works with their autochats
 
-
+## Files structure
+CSS Files:
+```
+dist
+    css
+        styles.css
+        styles.min.css
+lib
+    index.js // Compiled module entrypoint
+    gettour.js // Same as lib/index.js
+    gettour.min.js // minified version of gettour.js
+src
+    * // Source files are here
+```
 ## Features
 
 * Webpack 4 based.

@@ -11,16 +11,22 @@ let outputFile, mode;
 
 if (env === 'build') {
   mode = 'production';
-  outputFile = libraryName + '.min.js';
+  outputFile = '[name].min.js';
 } else {
   mode = 'development';
-  outputFile = libraryName + '.js';
+  outputFile = '[name].js';
 }
+
+const entry = {
+  index: __dirname + '/src/index.js'
+};
+
+entry[libraryName] = __dirname + '/src/index.js';
 
 const config = {
   mode: mode,
-  entry: __dirname + '/src/index.js',
-  devtool: 'inline-source-map',
+  entry,
+  devtool: mode === 'development' ? 'source-map' : false,
   output: {
     path: __dirname + '/lib',
     filename: outputFile,

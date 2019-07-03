@@ -58,7 +58,7 @@ function isMessageFromWidget(event) {
 }
 
 const onboarding = {
-  stylesFilePath: 'https://cdn.jsdelivr.net/npm/gettour/dist/gettour.min.js',
+  stylesFilePath: 'https://cdn.jsdelivr.net/npm/gettour/dist/css/styles.css',
   selector: '.getchat-widget__frame',
   expandClass: 'getchat-widget--expanded',
   active: false,
@@ -148,6 +148,9 @@ const onboarding = {
 
     return this;
   },
+  /**
+   * Подгрузка виджета если попадает под одну из условии
+   */
   loadCondition() {
     this.autoShowConditions.forEach(cond => {
       const regex = new RegExp(cond.urlRegex, 'i');
