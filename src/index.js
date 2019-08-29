@@ -7,8 +7,11 @@
 import introJs from './intro-chat';
 
 import ChangesListener from './ChangesListener';
+import ConditionEventsListeners from './ConditionEventsListeners';
+import EventBus from './EventBus';
 import { showError, loadCss } from './utils';
 
+window.getTourEventBus = new EventBus();
 /**
  * Warning. options - это свойсто объекта
  * @param {object} param0
@@ -62,6 +65,7 @@ const onboarding = {
   selector: '.getchat-widget__frame',
   expandClass: 'getchat-widget--expanded',
   active: false,
+  activeCondition: null,
   __intro: null,
   widgetHash: null,
   autoShowConditions: [],
@@ -71,10 +75,11 @@ const onboarding = {
   setOptions,
   stylesLoaded: false,
   __observers: {},
+
   options: {
     env: 'production'
   },
-
+  ConditionEventsListeners: null,
   /**
    *
    * @param {string} hash
@@ -85,6 +90,7 @@ const onboarding = {
 
     this.hash = hash;
     this.options = Object.assign(this.options, options);
+
     this.loadWidgetData().then(data => {
       this.domain = data.domain;
       this.active = data.widget_active;
@@ -97,6 +103,10 @@ const onboarding = {
         return;
       }
       this.__intro = introJs();
+
+      this.ConditionEventsListeners = new ConditionEventsListeners(this.autoShowConditions);
+
+      this.ConditionEventsListeners.watchForMatch();
 
       this.__intro.onchange(() => {
         self.__intro.refresh();
@@ -140,7 +150,10 @@ const onboarding = {
         this.__listenForObserveRequests.call(this, event);
       });
 
-      this.loadCondition();
+      // bla
+      window.getTourEventBus.addEventListener('ConditionMatched', e => {
+        this.loadCondition(e);
+      });
 
       // Слущать изменение URL
       this.listenForLocationChange();
@@ -151,20 +164,19 @@ const onboarding = {
   /**
    * Подгрузка виджета если попадает под одну из условии
    */
-  loadCondition() {
-    this.autoShowConditions.forEach(cond => {
-      const regex = new RegExp(cond.urlRegex, 'i');
 
-      if (regex.test(window.location.pathname)) {
-        setTimeout(() => {
-          this.renderWidget(cond.src);
-          if (!this.stylesLoaded) {
-            this.loadStyles();
-          }
-          this.initEventListeners();
-        }, cond.timeInterval * 1000);
-      }
-    });
+  loadCondition(event) {
+    if (event != null) {
+      this.activeCondition = event.detail.uuid;
+    }
+
+    this.renderWidget(this.autoShowConditions[this.activeCondition].link);
+
+    if (!this.stylesLoaded) {
+      this.loadStyles();
+    }
+
+    this.initSystemEventListeners();
   },
   listenForLocationChange() {
     /* This modifies these three functions so that all fire
@@ -198,7 +210,7 @@ const onboarding = {
      */
     window.addEventListener('locationchange', () => {
       this.reset();
-      this.loadCondition();
+      this.ConditionEventsListeners.watchForMatch();
     });
   },
   /**
@@ -315,6 +327,10 @@ const onboarding = {
       this.block.remove();
     }
   },
+  /**
+   *
+   * @param {String} widgetUrl
+   */
   renderWidget(widgetUrl) {
     this.block = document.createElement('div');
     this.block.className = 'getchat-widget getchat-widget--expanded';
@@ -331,7 +347,10 @@ const onboarding = {
     loadCss(this.stylesFilePath);
     this.stylesLoaded = true;
   },
-  initEventListeners() {
+  /**
+   * Подписывается на системные события виджета такие как открыти/закрытие по нажатию на иконку
+   */
+  initSystemEventListeners() {
     const $closeBtn = document.querySelector('.getchat-widget__btn--icon');
 
     $closeBtn.addEventListener('click', () => {
