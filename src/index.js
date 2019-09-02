@@ -64,8 +64,17 @@ const onboarding = {
   stylesFilePath: 'https://cdn.jsdelivr.net/npm/gettour/dist/css/styles.css',
   selector: '.getchat-widget__frame',
   expandClass: 'getchat-widget--expanded',
-  active: false,
-  activeCondition: null,
+  active: {
+    status: false,
+    condition: {
+      get() {
+        return this.ConditionEventsListeners.active;
+      },
+      set(val) {
+        this.ConditionEventsListeners.active = val;
+      }
+    }
+  },
   __intro: null,
   widgetHash: null,
   autoShowConditions: [],
@@ -93,13 +102,13 @@ const onboarding = {
 
     this.loadWidgetData().then(data => {
       this.domain = data.domain;
-      this.active = data.widget_active;
+      this.active.status = data.widget_active;
       this.autoShowConditions = data.conditions;
       if (this.domain !== window.location.host) {
         showError('[Ошибка] Виджет не для этого домена');
         return;
       }
-      if (!this.active) {
+      if (!this.active.status) {
         return;
       }
       this.__intro = introJs();
@@ -152,7 +161,26 @@ const onboarding = {
 
       // bla
       window.getTourEventBus.addEventListener('ConditionMatched', e => {
-        this.loadCondition(e);
+        if (
+          e != null &&
+          this.autoShowConditions[e.detail.uuid].onClick &&
+          this.active.condition === e.detail.uuid &&
+          this.active.condition
+        ) {
+          // Если нажали на элемент вызывающий данный виджет, но виджет уже подгружен
+          if (this.block.classList.contains(this.expandClass)) {
+            this.hideBlock();
+          } else {
+            this.expandBlock();
+          }
+        } else {
+          this.loadCondition(e);
+        }
+      });
+
+      // Если не подходит под условия
+      window.getTourEventBus.addEventListener('NoMatchedConditions', e => {
+        this.reset();
       });
 
       // Слущать изменение URL
@@ -167,28 +195,35 @@ const onboarding = {
 
   loadCondition(event) {
     if (event != null) {
-      this.activeCondition = event.detail.uuid;
+      this.active.condition = event.detail.uuid;
+    } else {
+      this.active.condition = null;
     }
 
-    this.renderWidget(this.autoShowConditions[this.activeCondition].link);
+    if (this.active.condition) {
+      this.renderWidget(this.autoShowConditions[this.active.condition].link);
 
-    if (!this.stylesLoaded) {
-      this.loadStyles();
+      if (!this.stylesLoaded) {
+        this.loadStyles();
+      }
+
+      this.initSystemEventListeners();
     }
-
-    this.initSystemEventListeners();
   },
   listenForLocationChange() {
     /* This modifies these three functions so that all fire
     a custom locationchange event for you to use,
     and also pushstate and replacestate events if you want to use those:
     From: https://stackoverflow.com/a/52809105/3939853 */
+
+    const evt = 'locationchange';
+
     history.pushState = (f =>
       function pushState() {
         const ret = f.apply(this, arguments);
 
         window.dispatchEvent(new Event('pushState'));
-        window.dispatchEvent(new Event('locationchange'));
+        window.dispatchEvent(new Event(evt));
         return ret;
       })(history.pushState);
 
@@ -197,20 +232,22 @@ const onboarding = {
         const ret = f.apply(this, arguments);
 
         window.dispatchEvent(new Event('replaceState'));
-        window.dispatchEvent(new Event('locationchange'));
+        window.dispatchEvent(new Event(evt));
         return ret;
       })(history.replaceState);
 
     window.addEventListener('popstate', () => {
-      window.dispatchEvent(new Event('locationchange'));
+      window.dispatchEvent(new Event(evt));
     });
 
     /**
-     * Слушать изменение URL
+     * Слушать изменение URL. watchForMatch запускает по условию loadCondition
      */
     window.addEventListener('locationchange', () => {
       this.reset();
-      this.ConditionEventsListeners.watchForMatch();
+      if (this.autoShowConditions.length) {
+        this.ConditionEventsListeners.watchForMatch();
+      }
     });
   },
   /**
@@ -376,10 +413,15 @@ const onboarding = {
     $icon.className = 'getchat-widget__icon--close';
   },
   loadWidgetData() {
-    let url = `https://getchat.me/api/the-bot/widget/${this.hash}/data`;
+    if (!this.hash) {
+      showError('[Ошибка] hash отсутствует');
+      return false;
+    }
+    let host = 'https://getchat.me';
+    let url = `${host}/api/the-bot/widget/${this.hash}/data`;
 
     if (this.options.env === 'development') {
-      url = url.replace('https://getchat.me', 'http://localhost:3000');
+      url = url.replace(host, 'http://localhost:3000');
     }
 
     return new Promise((resolve, reject) =>
