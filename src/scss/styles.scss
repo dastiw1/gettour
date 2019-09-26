@@ -1,10 +1,95 @@
 .getchat-widget {
-  right: 30px;
-  left: auto;
-  opacity: 1;
-  bottom: 0 !important;
   position: fixed;
+  margin: 0px;
+  padding: 0px;
+  opacity: 1;
+  box-sizing: border-box;
+  user-select: none;
+  background-position: 0px 0px;
+  background-size: 100% 100%;
+  right: 60px;
+  bottom: 60px;
+  width: 0px;
+  height: 0px;
+  background-color: rgba(255, 255, 255, 0);
   z-index: 10000000;
+
+  &__wrapper {
+    position: absolute;
+    margin: -50px 0px 0px -50px;
+    padding: 0px;
+    opacity: 1;
+    box-sizing: border-box;
+    user-select: none;
+    background-position: 0px 0px;
+    background-size: 100% 100%;
+    left: 0px;
+    top: 0px;
+    width: 100px;
+    height: 100px;
+    background-color: rgba(255, 255, 255, 0);
+    z-index: 0;
+  }
+
+  &__content {
+    display: none;
+    position: absolute;
+    margin: -58px 0px 0px -58px;
+    padding: 0px;
+    opacity: 0;
+    box-sizing: border-box;
+    user-select: none;
+    background-position: 0px 0px;
+    background-size: 100% 100%;
+    left: 50%;
+    top: 50%;
+    width: 116px;
+    height: 116px;
+    background-color: rgb(255, 255, 255);
+    border-radius: 116px;
+    z-index: 1;
+    transition: transform 0.5s ease 0s, width 0.5s ease 0s, height 0.5s ease 0s, margin-left 0.5s ease 0s, margin-top 0.5s ease 0s, border-radius 0.5s ease 0s, opacity 0.5s ease 0s;
+  }
+
+  &__launcher {
+    display: block;
+    position: absolute;
+    margin: -50px 0px 0px -50px;
+    padding: 0px;
+    opacity: 1;
+    box-sizing: border-box;
+    user-select: none;
+    background-position: 0px 0px;
+    background-size: 100% 100%;
+    left: 50px;
+    top: 50px;
+    border-radius: 50%;
+    min-width: 0;
+    height: 56px;
+    width: 56px;
+    background-color: #da29ae;
+    border-color: #da29ae;
+    z-index: 1;
+    cursor: pointer;
+    box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2), 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12);
+  }
+  &__launcher-content {
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+
+    width: 30px;
+    height: 30px;
+    margin-left: -26%;
+    margin-top: -26%;
+    box-sizing: border-box;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    color: #fff;
+    font-size: 22px;
+    text-align: center;
+  }
 
   &__btn {
     outline: none;
@@ -18,7 +103,7 @@
       cursor: pointer;
       left: -12px;
       top: -14px;
-      background: #DA29AD;
+      background: #da29ad;
       border-radius: 50%;
       width: 24px;
       height: 24px;
@@ -32,30 +117,13 @@
       opacity: 1;
     }
 
-    &--expand {
-     &::before {
-      border-style: solid;
-      border-width: 2px 2px 0 0;
-      border-color: #fff;
-      content: "";
-      display: inline-block;
-      height: 9px;
-      left: 0px;
-      position: relative;
-      top: 7px;
-      transform: rotate(-45deg);
-      vertical-align: top;
-      width: 9px;
-     }
-      
-    }
     &--close {
       &:before,
       &:after {
         position: absolute;
         left: 11px;
         top: 4px;
-        content: ' ';
+        content: " ";
         height: 16px;
         width: 2px;
         background-color: #fff;
@@ -72,6 +140,17 @@
     .getchat-widget__frame {
       height: 600px;
     }
+    .getchat-widget__content {
+      margin: -480px 0px 0px -333px;
+      display: block;
+      width: 320px;
+      height: 600px;
+      border-radius: 0px 0px 8px 8px;
+      opacity: 1;
+    }
+    .getchat-widget__launcher {
+      display: none;
+    }
   }
 
   &__frame {
@@ -81,8 +160,6 @@
     transition: height 0.15s linear 0.15s;
   }
 }
-
-
 
 /**
 *  IntroJS Styles
@@ -94,45 +171,12 @@
   z-index: 9999998;
   background-color: #000;
   opacity: 0;
-  background: -moz-radial-gradient(
-    center,
-    ellipse farthest-corner,
-    rgba(0, 0, 0, 0.4) 0,
-    rgba(0, 0, 0, 0.9) 100%
-  );
-  background: -webkit-gradient(
-    radial,
-    center center,
-    0,
-    center center,
-    100%,
-    color-stop(0, rgba(0, 0, 0, 0.4)),
-    color-stop(100%, rgba(0, 0, 0, 0.9))
-  );
-  background: -webkit-radial-gradient(
-    center,
-    ellipse farthest-corner,
-    rgba(0, 0, 0, 0.4) 0,
-    rgba(0, 0, 0, 0.9) 100%
-  );
-  background: -o-radial-gradient(
-    center,
-    ellipse farthest-corner,
-    rgba(0, 0, 0, 0.4) 0,
-    rgba(0, 0, 0, 0.9) 100%
-  );
-  background: -ms-radial-gradient(
-    center,
-    ellipse farthest-corner,
-    rgba(0, 0, 0, 0.4) 0,
-    rgba(0, 0, 0, 0.9) 100%
-  );
-  background: radial-gradient(
-    center,
-    ellipse farthest-corner,
-    rgba(0, 0, 0, 0.4) 0,
-    rgba(0, 0, 0, 0.9) 100%
-  );
+  background: -moz-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.4) 0, rgba(0, 0, 0, 0.9) 100%);
+  background: -webkit-gradient(radial, center center, 0, center center, 100%, color-stop(0, rgba(0, 0, 0, 0.4)), color-stop(100%, rgba(0, 0, 0, 0.9)));
+  background: -webkit-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.4) 0, rgba(0, 0, 0, 0.9) 100%);
+  background: -o-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.4) 0, rgba(0, 0, 0, 0.9) 100%);
+  background: -ms-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.4) 0, rgba(0, 0, 0, 0.9) 100%);
+  background: radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.4) 0, rgba(0, 0, 0, 0.9) 100%);
   -webkit-transition: all 0.3s ease-out;
   -moz-transition: all 0.3s ease-out;
   -ms-transition: all 0.3s ease-out;

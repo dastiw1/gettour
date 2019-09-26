@@ -1,0 +1,11 @@
+<div class="getchat-widget__wrapper">
+  <div class="getchat-widget__content">
+    <button type="button" class="getchat-widget__btn getchat-widget__btn--icon">
+      <i aria-hidden="true" class="getchat-widget__icon--close"></i>
+    </button>
+    <iframe src="{{ widgetUrl }}" class="getchat-widget__frame"></iframe>
+  </div>
+  <div class="getchat-widget__launcher">
+    <div class="getchat-widget__launcher-content">?</div>
+  </div>
+</div>
