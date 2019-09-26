@@ -1,4 +1,5 @@
 'use strict';
+import Cookies from 'js-cookie';
 
 class ConditionEventsListeners {
   constructor(conditions) {
@@ -28,22 +29,30 @@ class ConditionEventsListeners {
     document.addEventListener('click', this.clickCallback);
   }
 
-  testForPathname(cond) {
+  testForPathname(cond, path = null) {
     const regex = new RegExp(cond.page_url.value, 'i');
+    let pathname = path === null ? window.location.pathname : path;
 
-    return regex.test(window.location.pathname);
+    return regex.test(pathname);
   }
 
   start() {
     let matches = 0;
 
     Object.keys(this.autoConditions).forEach(uuid => {
+      let pathKey = 'gw_last_path';
       let cond = this.autoConditions[uuid];
+      let path = window.location.pathname;
+      let prevPath = Cookies.get(pathKey);
 
-      if (cond.page_url == null || (this.active !== uuid && this.testForPathname(cond))) {
+      if (
+        cond.page_url == null ||
+        /* this.active !== uuid &&  */ (prevPath !== path && this.testForPathname(cond, path))
+      ) {
         if (this.matchDate(cond)) {
           window.getTourEventBus.dispatchEvent('ConditionMatched', { uuid });
           this.active = uuid;
+          Cookies.set(pathKey, path);
           return;
         }
       } else {

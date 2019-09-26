@@ -4,12 +4,16 @@
 /* global window */
 /* global document */
 /* global history */
-import introJs from './intro-chat';
 
+import Cookies from 'js-cookie';
+
+import introJs from './intro-chat';
 import ChangesListener from './ChangesListener';
 import ConditionEventsListeners from './ConditionEventsListeners';
 import EventBus from './EventBus';
 import { showError, loadCss } from './utils';
+
+const widgetTemplateLoader = require('./templates/widget.mst');
 
 window.getTourEventBus = new EventBus();
 /**
@@ -61,9 +65,11 @@ function isMessageFromWidget(event) {
 }
 
 const onboarding = {
-  stylesFilePath: 'https://cdn.jsdelivr.net/npm/gettour/dist/css/styles.css',
+  // stylesFilePath: 'https://cdn.jsdelivr.net/npm/gettour/dist/css/styles.css',
+  stylesFilePath: '/css/gettour.min.css',
   selector: '.getchat-widget__frame',
   expandClass: 'getchat-widget--expanded',
+  expandCookieKey: 'gw-state',
   active: {
     status: false,
     condition: {
@@ -83,6 +89,7 @@ const onboarding = {
   block: null,
   setOptions,
   stylesLoaded: false,
+  triggeredCount: 0,
   __observers: {},
 
   options: {
@@ -104,6 +111,9 @@ const onboarding = {
       this.domain = data.domain;
       this.active.status = data.widget_active;
       this.autoShowConditions = data.conditions;
+
+      this.options = data.widget_options;
+
       if (this.domain !== window.location.host) {
         showError('[Ошибка] Виджет не для этого домена');
         return;
@@ -201,13 +211,22 @@ const onboarding = {
     }
 
     if (this.active.condition) {
-      this.renderWidget(this.autoShowConditions[this.active.condition].link);
+      let oldVal = Cookies.get(this.expandCookieKey);
+      let asExpanded = oldVal === 'true';
+
+      this.renderWidget(this.autoShowConditions[this.active.condition].link, asExpanded);
 
       if (!this.stylesLoaded) {
         this.loadStyles();
       }
 
       this.initSystemEventListeners();
+
+      if (this.triggeredCount === 0 && this.options.launchAsExpanded) {
+        this.expandBlock();
+      }
+
+      this.triggeredCount += 1;
     }
   },
   listenForLocationChange() {
@@ -357,6 +376,7 @@ const onboarding = {
   reset() {
     this.__intro._options.steps = [];
     this.__intro.refresh();
+    // this.triggeredCount = 0;
     this.destroyWidget();
   },
   destroyWidget() {
@@ -366,19 +386,30 @@ const onboarding = {
   },
   /**
    *
-   * @param {String} widgetUrl
+   * @param {string} widgetUrl
+   * @param {boolean} asExpanded
+   * @returns {void}
    */
-  renderWidget(widgetUrl) {
+  renderWidget(widgetUrl, asExpanded) {
     this.block = document.createElement('div');
-    this.block.className = 'getchat-widget getchat-widget--expanded';
-    const widgetHtml =
-      '<button type="button" class="getchat-widget__btn getchat-widget__btn--icon" >' +
-      '<i aria-hidden="true" class="getchat-widget__icon--close"></i></button>' +
-      `<iframe src="${widgetUrl}" class="getchat-widget__frame"></iframe>`;
+    this.block.className = 'getchat-widget';
+    if (asExpanded) {
+      this.block.classList.add(this.expandClass);
+    }
+
+    const vars = {
+      widgetUrl,
+      asExpanded
+    };
+    const widgetHtml = widgetTemplateLoader(vars);
 
     this.block.innerHTML = widgetHtml;
 
     document.body.appendChild(this.block);
+
+    (function () {
+      new Image().src = widgetUrl;
+    })();
   },
   loadStyles() {
     loadCss(this.stylesFilePath);
@@ -388,29 +419,29 @@ const onboarding = {
    * Подписывается на системные события виджета такие как открыти/закрытие по нажатию на иконку
    */
   initSystemEventListeners() {
+    const widget = document.querySelector('.getchat-widget');
     const $closeBtn = document.querySelector('.getchat-widget__btn--icon');
+    const $launcher = document.querySelector('.getchat-widget__launcher');
 
     $closeBtn.addEventListener('click', () => {
-      if (this.block.classList.contains(this.expandClass)) {
+      if (widget.classList.contains(this.expandClass)) {
         this.hideBlock();
-      } else {
+      }
+    });
+
+    $launcher.addEventListener('click', () => {
+      if (!widget.classList.contains(this.expandClass)) {
         this.expandBlock();
       }
     });
   },
   hideBlock() {
-    const $closeBtn = document.querySelector('.getchat-widget__btn--icon');
-    const $icon = $closeBtn.children[0];
-
     this.block.classList.remove(this.expandClass);
-    $icon.className = 'getchat-widget__icon--expand';
+    Cookies.set(this.expandCookieKey, false, { expires: 2147483647 });
   },
   expandBlock() {
-    const $closeBtn = document.querySelector('.getchat-widget__btn--icon');
-    const $icon = $closeBtn.children[0];
-
     this.block.classList.add(this.expandClass);
-    $icon.className = 'getchat-widget__icon--close';
+    Cookies.set(this.expandCookieKey, true, { expires: 2147483647 });
   },
   loadWidgetData() {
     if (!this.hash) {
