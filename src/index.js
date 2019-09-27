@@ -11,7 +11,10 @@ import introJs from './intro-chat';
 import ChangesListener from './ChangesListener';
 import ConditionEventsListeners from './ConditionEventsListeners';
 import EventBus from './EventBus';
-import { showError, loadCss } from './utils';
+import {
+  showError,
+  loadCss
+} from './utils';
 
 const widgetTemplateLoader = require('./templates/widget.mst');
 
@@ -20,7 +23,9 @@ window.getTourEventBus = new EventBus();
  * Warning. options - это свойсто объекта
  * @param {object} param0
  */
-function setOptions({ options }) {
+function setOptions({
+  options
+}) {
   if (typeof options === 'object') {
     this.__intro.setOptions(options);
   } else {
@@ -275,7 +280,9 @@ const onboarding = {
    */
   __listenForActionClickedRequests(e) {
     if (isMessageFromWidget(e) && e.data.action === 'ACTION_CLICKED') {
-      const { answer_id } = e.data;
+      const {
+        answer_id
+      } = e.data;
 
       if (answer_id === this.__intro._options.steps[0].highlightEventAnswerId) {
         this.__intro.exit();
@@ -311,7 +318,11 @@ const onboarding = {
 
     return elementsArray.find(isAnyPartOfElementInViewport);
   },
-  highlight({ selector, closeEvent, highlightEventAnswerId }) {
+  highlight({
+    selector,
+    closeEvent,
+    highlightEventAnswerId
+  }) {
     const step = {
       element: selector,
       fixed: true,
@@ -349,8 +360,9 @@ const onboarding = {
       closeEvent,
       () => {
         this.__intro.exit();
-      },
-      { once: true }
+      }, {
+        once: true
+      }
     );
     // Close
     if (this.__intro._introItems.length) {
@@ -371,7 +383,9 @@ const onboarding = {
       return;
     }
 
-    iframe.contentWindow.postMessage(Object.assign(msg, { source: 'get-tour-library' }));
+    iframe.contentWindow.postMessage(Object.assign(msg, {
+      source: 'get-tour-library'
+    }));
   },
   reset() {
     this.__intro._options.steps = [];
@@ -397,9 +411,24 @@ const onboarding = {
       this.block.classList.add(this.expandClass);
     }
 
+    let bots = this.ConditionEventsListeners
+      .filterByPath(this.autoShowConditions)
+      .map((uuid) => {
+        const {
+          link,
+          name
+        } = this.autoShowConditions[uuid];
+
+        return {
+          link,
+          name
+        };
+
+      });
     const vars = {
       widgetUrl,
-      asExpanded
+      asExpanded,
+      bots
     };
     const widgetHtml = widgetTemplateLoader(vars);
 
@@ -420,7 +449,8 @@ const onboarding = {
    */
   initSystemEventListeners() {
     const widget = document.querySelector('.getchat-widget');
-    const $closeBtn = document.querySelector('.getchat-widget__btn--icon');
+    const $menuBtn = document.querySelector('.getchat-widget__btn--action-menu');
+    const $closeBtn = document.querySelector('.getchat-widget__btn--action-close');
     const $launcher = document.querySelector('.getchat-widget__launcher');
 
     $closeBtn.addEventListener('click', () => {
@@ -429,24 +459,48 @@ const onboarding = {
       }
     });
 
+    $menuBtn.addEventListener('click', () => {
+      let activeClass = 'getchat-widget__bots--active';
+      let $botsBlock = document.querySelector('.getchat-widget__bots');
+      let method;
+
+      if ($botsBlock.classList.contains(activeClass)) {
+        method = 'remove';
+      } else {
+        method = 'add';
+      }
+
+      $botsBlock.classList[method](activeClass);
+    });
+
     $launcher.addEventListener('click', () => {
       if (!widget.classList.contains(this.expandClass)) {
         this.expandBlock();
       }
     });
+
+    window.addEventListener('beforeunload', () => {
+      clearInterval(this.ConditionEventsListeners.interval);
+      Cookies.remove('gw_last_path');
+    });
   },
   hideBlock() {
     this.block.classList.remove(this.expandClass);
-    Cookies.set(this.expandCookieKey, false, { expires: 2147483647 });
+    Cookies.set(this.expandCookieKey, false, {
+      expires: 2147483647
+    });
   },
   expandBlock() {
     this.block.classList.add(this.expandClass);
-    Cookies.set(this.expandCookieKey, true, { expires: 2147483647 });
+    Cookies.set(this.expandCookieKey, true, {
+      expires: 2147483647
+    });
   },
   loadWidgetData() {
     if (!this.hash) {
-      showError('[Ошибка] hash отсутствует');
-      return false;
+      const err = '[Ошибка] hash отсутствует';
+
+      throw err;
     }
     let host = 'https://getchat.me';
     let url = `${host}/api/the-bot/widget/${this.hash}/data`;
@@ -455,15 +509,19 @@ const onboarding = {
       url = url.replace(host, 'http://localhost:3000');
     }
 
-    return new Promise((resolve, reject) =>
-      fetch(url, {
+    return new Promise((resolve, reject) => {
+      const init = {
         method: 'GET',
         credentials: 'omit',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         mode: 'cors',
         cache: 'no-cache',
         dataType: 'jsonp'
-      })
+      };
+
+      return fetch(url, init)
         .then(res => {
           if (res.status === 200) {
             return res.json();
@@ -475,8 +533,8 @@ const onboarding = {
         .catch(error => {
           showError(error);
           reject(error);
-        })
-    );
+        });
+    });
   }
 };
 

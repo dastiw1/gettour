@@ -1,8 +1,11 @@
 'use strict';
 import Cookies from 'js-cookie';
 
+let pathKey = 'gw_last_path';
+
 class ConditionEventsListeners {
   constructor(conditions) {
+    this.interval = null;
     this.autoConditions = {};
     this.manualConditions = {};
     this.metrics = {
@@ -22,7 +25,7 @@ class ConditionEventsListeners {
     });
   }
   watchForMatch() {
-    setInterval(() => {
+    this.interval = setInterval(() => {
       this.start();
     }, 1000);
     this.clickCallback = this.clickListener.bind(this);
@@ -35,29 +38,37 @@ class ConditionEventsListeners {
 
     return regex.test(pathname);
   }
+  /**
+   * Фильтрует условия по URL адресу
+   * @param {Array} conds Список условии
+   */
+  filterByPath(conds) {
+    return Object.keys(conds).filter(uuid => {
+      let cond = conds[uuid];
+      let path = window.location.pathname;
+      let prevPath = Cookies.get(pathKey);
+
+      return (cond.page_url == null || (prevPath !== path && this.testForPathname(cond, path)));
+    });
+
+  }
 
   start() {
     let matches = 0;
 
-    Object.keys(this.autoConditions).forEach(uuid => {
-      let pathKey = 'gw_last_path';
-      let cond = this.autoConditions[uuid];
-      let path = window.location.pathname;
-      let prevPath = Cookies.get(pathKey);
+    this.filterByPath(this.autoConditions).forEach(uuid => {
 
-      if (
-        cond.page_url == null ||
-        /* this.active !== uuid &&  */ (prevPath !== path && this.testForPathname(cond, path))
-      ) {
-        if (this.matchDate(cond)) {
-          window.getTourEventBus.dispatchEvent('ConditionMatched', { uuid });
-          this.active = uuid;
-          Cookies.set(pathKey, path);
-          return;
-        }
-      } else {
-        console.log('false');
+      let cond = this.autoConditions[uuid];
+
+      if (this.matchDate(cond)) {
+        window.getTourEventBus.dispatchEvent('ConditionMatched', {
+          uuid
+        });
+        this.active = uuid;
+        Cookies.set(pathKey, window.location.pathname);
+        return;
       }
+
     });
 
     if (matches === 0 && this.active != null) {
@@ -117,7 +128,9 @@ class ConditionEventsListeners {
 
       if (this.testForPathname(cond) && jsEvent.target.matches(cond.click_on_element.value)) {
         if (this.matchDate(cond)) {
-          window.getTourEventBus.dispatchEvent('ConditionMatched', { uuid });
+          window.getTourEventBus.dispatchEvent('ConditionMatched', {
+            uuid
+          });
         }
       }
     });

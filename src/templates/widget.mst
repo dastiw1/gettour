@@ -1,8 +1,25 @@
 <div class="getchat-widget__wrapper">
   <div class="getchat-widget__content">
-    <button type="button" class="getchat-widget__btn getchat-widget__btn--icon">
-      <i aria-hidden="true" class="getchat-widget__icon--close"></i>
-    </button>
+    <div class="getchat-widget__header">
+      <div class="getchat-widget__btn getchat-widget__btn--action-menu getchat-widget__btn--icon">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <div class="getchat-widget__btn getchat-widget__btn--action-close getchat-widget__btn--icon">
+        <i aria-hidden="true" class="getchat-widget__icon--close"></i>
+      </div>
+    </div>
+    <div class="getchat-widget__bots">
+    <div class="getchat-widget__bots-label">Доступные авточаты: </div>
+
+      <ul>
+        {{#bots}}
+        <li class="getchat-widget__bots-item" data-bot-url="{{link}}">{{ name }}</li>
+        {{/bots}}
+      </ul>
+    </div>
+
     <iframe src="{{ widgetUrl }}" class="getchat-widget__frame"></iframe>
   </div>
   <div class="getchat-widget__launcher">
