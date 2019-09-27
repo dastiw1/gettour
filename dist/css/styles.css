@@ -12,7 +12,48 @@
   width: 0px;
   height: 0px;
   background-color: rgba(255, 255, 255, 0);
-  z-index: 10000000; }
+  z-index: 10000000;
+  /* &__bots {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    width: 100%;
+    height: auto;
+    min-height: 58px;
+    background: #fff;
+    padding: 4px  0;
+    border: 2px solid #da28ad;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s, opacity 0.5s linear;
+
+    &--active {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    &-label {
+      text-indent: 7px;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    > ul {
+      list-style: none;
+      padding-left: 0;
+
+      > li {
+        display: block;
+        padding: 5px 5px 5px 10px;
+        font-size: 12px;
+        line-height: 1.4;
+        color: #550;
+        cursor: pointer;
+        &:hover {
+          background: rgba(234, 129, 207, 0.22);
+        }
+      }
+    }
+  } */ }
   .getchat-widget__wrapper {
     position: absolute;
     margin: -50px 0px 0px -50px;
@@ -53,38 +94,6 @@
     border-top-right-radius: 4px;
     display: flex;
     justify-content: space-between; }
-  .getchat-widget__bots {
-    position: absolute;
-    top: 40px;
-    left: 0;
-    width: 100%;
-    height: auto;
-    min-height: 58px;
-    background: #fff;
-    padding: 4px  0;
-    border: 2px solid #da28ad;
-    visibility: hidden;
-    opacity: 0;
-    transition: visibility 0s, opacity 0.5s linear; }
-    .getchat-widget__bots--active {
-      visibility: visible;
-      opacity: 1; }
-    .getchat-widget__bots-label {
-      text-indent: 7px;
-      font-size: 14px;
-      margin-bottom: 5px; }
-    .getchat-widget__bots > ul {
-      list-style: none;
-      padding-left: 0; }
-      .getchat-widget__bots > ul > li {
-        display: block;
-        padding: 5px 5px 5px 10px;
-        font-size: 12px;
-        line-height: 1.4;
-        color: #550;
-        cursor: pointer; }
-        .getchat-widget__bots > ul > li:hover {
-          background: rgba(234, 129, 207, 0.22); }
   .getchat-widget__launcher {
     display: block;
     position: absolute;

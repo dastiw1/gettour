@@ -374,8 +374,12 @@ const onboarding = {
       this.__intro.start(step);
     }, 50);
   },
-  sendMessage(msg) {
-    this.__intro.exit();
+  sendMessage(msg, msgType = 'trigger', exit = true) {
+
+    if (exit) {
+      this.__intro.exit();
+    }
+
     const iframe = document.querySelector(this.selector);
 
     if (!iframe) {
@@ -384,7 +388,8 @@ const onboarding = {
     }
 
     iframe.contentWindow.postMessage(Object.assign(msg, {
-      source: 'get-tour-library'
+      source: 'get-tour-library',
+      msgType
     }));
   },
   reset() {
@@ -411,24 +416,10 @@ const onboarding = {
       this.block.classList.add(this.expandClass);
     }
 
-    let bots = this.ConditionEventsListeners
-      .filterByPath(this.autoShowConditions)
-      .map((uuid) => {
-        const {
-          link,
-          name
-        } = this.autoShowConditions[uuid];
-
-        return {
-          link,
-          name
-        };
-
-      });
     const vars = {
       widgetUrl,
-      asExpanded,
-      bots
+      asExpanded
+
     };
     const widgetHtml = widgetTemplateLoader(vars);
 
@@ -460,17 +451,7 @@ const onboarding = {
     });
 
     $menuBtn.addEventListener('click', () => {
-      let activeClass = 'getchat-widget__bots--active';
-      let $botsBlock = document.querySelector('.getchat-widget__bots');
-      let method;
-
-      if ($botsBlock.classList.contains(activeClass)) {
-        method = 'remove';
-      } else {
-        method = 'add';
-      }
-
-      $botsBlock.classList[method](activeClass);
+      this.showAvailableBots();
     });
 
     $launcher.addEventListener('click', () => {
@@ -495,6 +476,37 @@ const onboarding = {
     Cookies.set(this.expandCookieKey, true, {
       expires: 2147483647
     });
+  },
+
+  showAvailableBots() {
+    let answers = this.ConditionEventsListeners.filterByPath(this.autoShowConditions, true)
+      .map((uuid) => {
+        let minimum = 9000000000000000;
+        let maximum = 9007199254740991;
+        let answer_id = Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
+
+        const {
+          bot_id,
+          name
+        } = this.autoShowConditions[uuid];
+
+        return {
+          answer: {
+            answer_id,
+            bot_id,
+            listener_id: undefined,
+            text: name,
+            type: 'botLoader'
+          },
+          type: 'actionAnswer'
+        };
+
+      });
+
+    console.log(answers);
+    this.sendMessage({
+      answers
+    }, 'botSelector', false);
   },
   loadWidgetData() {
     if (!this.hash) {

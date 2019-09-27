@@ -40,32 +40,44 @@ class ConditionEventsListeners {
   }
   /**
    * Фильтрует условия по URL адресу
-   * @param {Array} conds Список условии
+   * @param {Object} conds Список условии
+   * @param {boolean} asArray
    */
-  filterByPath(conds) {
-    return Object.keys(conds).filter(uuid => {
+  filterByPath(conds, asArray = false) {
+    let filtered = {};
+    let uuidsArr = Object.keys(conds).filter(uuid => {
       let cond = conds[uuid];
       let path = window.location.pathname;
-      let prevPath = Cookies.get(pathKey);
 
-      return (cond.page_url == null || (prevPath !== path && this.testForPathname(cond, path)));
+      return (cond.page_url == null || (this.testForPathname(cond, path)));
     });
 
+    if (asArray) {
+      return uuidsArr;
+    }
+
+    uuidsArr.forEach((uuid) => {
+      filtered[uuid] = conds[uuid];
+    });
+
+    return filtered;
   }
 
   start() {
     let matches = 0;
 
-    this.filterByPath(this.autoConditions).forEach(uuid => {
+    this.filterByPath(this.autoConditions, true).forEach(uuid => {
+      let path = window.location.pathname;
+      let prevPath = Cookies.get(pathKey);
 
       let cond = this.autoConditions[uuid];
 
-      if (this.matchDate(cond)) {
+      if (prevPath !== path && this.matchDate(cond)) {
         window.getTourEventBus.dispatchEvent('ConditionMatched', {
           uuid
         });
         this.active = uuid;
-        Cookies.set(pathKey, window.location.pathname);
+        Cookies.set(pathKey, path);
         return;
       }
 
