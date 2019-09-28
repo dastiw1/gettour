@@ -380,17 +380,17 @@ const onboarding = {
       this.__intro.exit();
     }
 
-    const iframe = document.querySelector(this.selector);
+    const frame = document.querySelector(this.selector);
 
-    if (!iframe) {
+    if (!frame) {
       showError("Widget's iframe not found!");
       return;
     }
-
-    iframe.contentWindow.postMessage(Object.assign(msg, {
+    console.log('z', frame);
+    frame.contentWindow.postMessage(Object.assign(msg, {
       source: 'get-tour-library',
       msgType
-    }));
+    }), '*');
   },
   reset() {
     this.__intro._options.steps = [];
@@ -412,9 +412,6 @@ const onboarding = {
   renderWidget(widgetUrl, asExpanded) {
     this.block = document.createElement('div');
     this.block.className = 'getchat-widget';
-    if (asExpanded) {
-      this.block.classList.add(this.expandClass);
-    }
 
     const vars = {
       widgetUrl,
@@ -426,6 +423,14 @@ const onboarding = {
     this.block.innerHTML = widgetHtml;
 
     document.body.appendChild(this.block);
+
+    let frame = document.querySelector('.getchat-widget__frame');
+
+    frame.onload = () => {
+      if (asExpanded) {
+        this.expandBlock();
+      }
+    };
 
     (function () {
       new Image().src = widgetUrl;
@@ -487,14 +492,15 @@ const onboarding = {
 
         const {
           bot_id,
-          name
+          name,
+          start
         } = this.autoShowConditions[uuid];
 
         return {
           answer: {
             answer_id,
             bot_id,
-            listener_id: undefined,
+            listener_id: start,
             text: name,
             type: 'botLoader'
           },
@@ -503,7 +509,6 @@ const onboarding = {
 
       });
 
-    console.log(answers);
     this.sendMessage({
       answers
     }, 'botSelector', false);
