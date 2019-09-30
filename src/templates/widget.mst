@@ -13,6 +13,16 @@
     <iframe src="{{ widgetUrl }}" class="getchat-widget__frame"></iframe>
   </div>
   <div class="getchat-widget__launcher">
-    <div class="getchat-widget__launcher-content">?</div>
+    <div class="getchat-widget__launcher-content">
+      <div class="getchat-widget__launcher__disk getchat-widget__launcher__disk-1"></div>
+      <div class="getchat-widget__launcher__disk getchat-widget__launcher__disk-2"></div>
+      <div class="getchat-launch-logo">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
   </div>
 </div>

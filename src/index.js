@@ -74,6 +74,7 @@ const onboarding = {
   stylesFilePath: '/css/gettour.min.css',
   selector: '.getchat-widget__frame',
   expandClass: 'getchat-widget--expanded',
+  hasMsgClass: 'getchat-widget--has-msgs',
   expandCookieKey: 'gw-state',
   active: {
     status: false,
@@ -172,6 +173,11 @@ const onboarding = {
       // Слушать события для Observer-а
       window.addEventListener('message', event => {
         this.__listenForObserveRequests.call(this, event);
+      });
+
+      // Слушать события наличия новых сообщении
+      window.addEventListener('message', event => {
+        this.__listenForNewMessages.call(this, event);
       });
 
       // bla
@@ -302,6 +308,30 @@ const onboarding = {
     }
   },
   /**
+   * Если приходят такие экшны, то на основе значения value
+   * говорим виджету мигать или нет.
+   * @param {object} e
+   */
+  __listenForNewMessages(e) {
+    if (isMessageFromWidget(e) && e.data.action === 'NEW_MESSAGE') {
+      // console.log('NEW_MESSAGE', e);
+      const {
+        value
+      } = e.data;
+      let widget = document.querySelector('.getchat-widget');
+
+      if (value) {
+
+        if (!widget.classList.contains(this.hasMsgClass) && !widget.classList.contains(this.expandClass)) {
+          widget.classList.add(this.hasMsgClass);
+        }
+
+      } else {
+        widget.classList.remove(this.hasMsgClass);
+      }
+    }
+  },
+  /**
    * Запустить прослушивание закрытия выделения элемента
    * @param {Object} e
    */
@@ -386,7 +416,7 @@ const onboarding = {
       showError("Widget's iframe not found!");
       return;
     }
-    console.log('z', frame);
+
     frame.contentWindow.postMessage(Object.assign(msg, {
       source: 'get-tour-library',
       msgType
