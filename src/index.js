@@ -70,8 +70,8 @@ function isMessageFromWidget(event) {
 }
 
 const onboarding = {
-  // stylesFilePath: 'https://cdn.jsdelivr.net/npm/gettour/dist/css/styles.css',
-  stylesFilePath: '/css/gettour.min.css',
+  stylesFilePath: 'https://cdn.jsdelivr.net/npm/gettour/dist/css/styles.css',
+  // stylesFilePath: '/css/gettour.min.css',
   selector: '.getchat-widget__frame',
   expandClass: 'getchat-widget--expanded',
   hasMsgClass: 'getchat-widget--has-msgs',
