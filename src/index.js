@@ -11,10 +11,7 @@ import introJs from './intro-chat';
 import ChangesListener from './ChangesListener';
 import ConditionEventsListeners from './ConditionEventsListeners';
 import EventBus from './EventBus';
-import {
-  showError,
-  loadCss
-} from './utils';
+import { showError, loadCss } from './utils';
 
 const widgetTemplateLoader = require('./templates/widget.mst');
 
@@ -23,9 +20,7 @@ window.getTourEventBus = new EventBus();
  * Warning. options - это свойсто объекта
  * @param {object} param0
  */
-function setOptions({
-  options
-}) {
+function setOptions({ options }) {
   if (typeof options === 'object') {
     this.__intro.setOptions(options);
   } else {
@@ -69,9 +64,12 @@ function isMessageFromWidget(event) {
   return false;
 }
 
+const STYLEPATH = {
+  development: '/css/gettour.min.css',
+  production: 'https://cdn.jsdelivr.net/npm/gettour/dist/css/styles.min.css'
+};
+
 const onboarding = {
-  stylesFilePath: 'https://cdn.jsdelivr.net/npm/gettour/dist/css/styles.css',
-  // stylesFilePath: '/css/gettour.min.css',
   selector: '.getchat-widget__frame',
   expandClass: 'getchat-widget--expanded',
   hasMsgClass: 'getchat-widget--has-msgs',
@@ -118,7 +116,7 @@ const onboarding = {
       this.active.status = data.widget_active;
       this.autoShowConditions = data.conditions;
 
-      this.options = data.widget_options;
+      this.options = Object.assign(this.options, data.widget_options);
 
       if (this.domain !== window.location.host) {
         showError('[Ошибка] Виджет не для этого домена');
@@ -286,9 +284,7 @@ const onboarding = {
    */
   __listenForActionClickedRequests(e) {
     if (isMessageFromWidget(e) && e.data.action === 'ACTION_CLICKED') {
-      const {
-        answer_id
-      } = e.data;
+      const { answer_id } = e.data;
 
       if (answer_id === this.__intro._options.steps[0].highlightEventAnswerId) {
         this.__intro.exit();
@@ -314,18 +310,13 @@ const onboarding = {
    */
   __listenForNewMessages(e) {
     if (isMessageFromWidget(e) && e.data.action === 'NEW_MESSAGE') {
-      // console.log('NEW_MESSAGE', e);
-      const {
-        value
-      } = e.data;
+      const { value } = e.data;
       let widget = document.querySelector('.getchat-widget');
 
       if (value) {
-
         if (!widget.classList.contains(this.hasMsgClass) && !widget.classList.contains(this.expandClass)) {
           widget.classList.add(this.hasMsgClass);
         }
-
       } else {
         widget.classList.remove(this.hasMsgClass);
       }
@@ -348,11 +339,7 @@ const onboarding = {
 
     return elementsArray.find(isAnyPartOfElementInViewport);
   },
-  highlight({
-    selector,
-    closeEvent,
-    highlightEventAnswerId
-  }) {
+  highlight({ selector, closeEvent, highlightEventAnswerId }) {
     const step = {
       element: selector,
       fixed: true,
@@ -390,7 +377,8 @@ const onboarding = {
       closeEvent,
       () => {
         this.__intro.exit();
-      }, {
+      },
+      {
         once: true
       }
     );
@@ -405,7 +393,6 @@ const onboarding = {
     }, 50);
   },
   sendMessage(msg, msgType = 'trigger', exit = true) {
-
     if (exit) {
       this.__intro.exit();
     }
@@ -417,10 +404,13 @@ const onboarding = {
       return;
     }
 
-    frame.contentWindow.postMessage(Object.assign(msg, {
-      source: 'get-tour-library',
-      msgType
-    }), '*');
+    frame.contentWindow.postMessage(
+      Object.assign(msg, {
+        source: 'get-tour-library',
+        msgType
+      }),
+      '*'
+    );
   },
   reset() {
     this.__intro._options.steps = [];
@@ -446,7 +436,6 @@ const onboarding = {
     const vars = {
       widgetUrl,
       asExpanded
-
     };
     const widgetHtml = widgetTemplateLoader(vars);
 
@@ -466,8 +455,14 @@ const onboarding = {
       new Image().src = widgetUrl;
     })();
   },
+  /**
+   * Возвращает путь к CSS
+   */
+  stylesFilePath() {
+    return STYLEPATH[this.options.env];
+  },
   loadStyles() {
-    loadCss(this.stylesFilePath);
+    loadCss(this.stylesFilePath());
     this.stylesLoaded = true;
   },
   /**
@@ -514,34 +509,32 @@ const onboarding = {
   },
 
   showAvailableBots() {
-    let answers = this.ConditionEventsListeners.filterByPath(this.autoShowConditions, true)
-      .map((uuid) => {
-        let minimum = 9000000000000000;
-        let maximum = 9007199254740991;
-        let answer_id = Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
+    let answers = this.ConditionEventsListeners.filterByPath(this.autoShowConditions, true).map(uuid => {
+      let minimum = 9000000000000000;
+      let maximum = 9007199254740991;
+      let answer_id = Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
 
-        const {
+      const { bot_id, name, start } = this.autoShowConditions[uuid];
+
+      return {
+        answer: {
+          answer_id,
           bot_id,
-          name,
-          start
-        } = this.autoShowConditions[uuid];
+          listener_id: start,
+          text: name,
+          type: 'botLoader'
+        },
+        type: 'actionAnswer'
+      };
+    });
 
-        return {
-          answer: {
-            answer_id,
-            bot_id,
-            listener_id: start,
-            text: name,
-            type: 'botLoader'
-          },
-          type: 'actionAnswer'
-        };
-
-      });
-
-    this.sendMessage({
-      answers
-    }, 'botSelector', false);
+    this.sendMessage(
+      {
+        answers
+      },
+      'botSelector',
+      false
+    );
   },
   loadWidgetData() {
     if (!this.hash) {

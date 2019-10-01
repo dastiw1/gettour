@@ -25,11 +25,15 @@ class ConditionEventsListeners {
     });
   }
   watchForMatch() {
+    let listenerOptions = {
+      once: true
+    };
+
     this.interval = setInterval(() => {
       this.start();
     }, 1000);
-    this.clickCallback = this.clickListener.bind(this);
-    document.addEventListener('click', this.clickCallback);
+
+    document.addEventListener('click', this.clickListener.bind(this), listenerOptions);
   }
 
   testForPathname(cond, path = null) {
@@ -49,14 +53,14 @@ class ConditionEventsListeners {
       let cond = conds[uuid];
       let path = window.location.pathname;
 
-      return (cond.page_url == null || (this.testForPathname(cond, path)));
+      return cond.page_url == null || this.testForPathname(cond, path);
     });
 
     if (asArray) {
       return uuidsArr;
     }
 
-    uuidsArr.forEach((uuid) => {
+    uuidsArr.forEach(uuid => {
       filtered[uuid] = conds[uuid];
     });
 
@@ -72,7 +76,7 @@ class ConditionEventsListeners {
 
       let cond = this.autoConditions[uuid];
 
-      if (prevPath !== path && this.matchDate(cond)) {
+      if (this.active !== uuid && prevPath !== path && this.matchDate(cond)) {
         window.getTourEventBus.dispatchEvent('ConditionMatched', {
           uuid
         });
@@ -80,7 +84,6 @@ class ConditionEventsListeners {
         Cookies.set(pathKey, path);
         return;
       }
-
     });
 
     if (matches === 0 && this.active != null) {

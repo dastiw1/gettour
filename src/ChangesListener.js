@@ -167,6 +167,7 @@ class ChangesListener {
   nativeEventListener(jsEvent) {
     if (jsEvent.target.matches(this.selector)) {
       this.sendMessage();
+
       jsEvent.target.removeEventListener(this.event, this.callback, false);
     }
   }
@@ -179,7 +180,7 @@ class ChangesListener {
     if (jsEvent.target.matches(this.selector)) {
       this.sendMessage();
 
-      jsEvent.target.removeEventListener(this.event, this.callback, false);
+      document.removeEventListener(this.event, this.callback);
     }
   }
 

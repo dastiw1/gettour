@@ -139,11 +139,11 @@
   .getchat-widget--expanded .getchat-widget__frame {
     height: 600px; }
   .getchat-widget--expanded .getchat-widget__content {
-    margin: -580px 0 0 -333px;
+    margin: -540px 0 0 -333px;
     display: block;
     width: 320px;
     height: 600px;
-    border-radius: 0px 0px 8px 8px;
+    border-radius: 5px 5px 0px 0px;
     opacity: 1; }
   .getchat-widget--expanded .getchat-widget__launcher {
     display: none; }
