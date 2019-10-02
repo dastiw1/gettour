@@ -12,9 +12,11 @@ export function __isNativeEvent(event) {
 }
 
 class ChangesListener {
-  constructor({ listener_id, selector, event, attributeName }) {
+  constructor({ answer_id, listener_id, selector, event, attributeName, active_listener_id }) {
+    this.answer_id = answer_id;
     this.__tourObject = null;
     this.listener_id = listener_id;
+    this.parent_listener = active_listener_id;
     this.selector = selector;
     this.event = event;
     this.attributeName = attributeName;
@@ -159,16 +161,23 @@ class ChangesListener {
       listener_id: this.listener_id
     });
   }
+  /**
+   * Проверяет активен ли тот листенер в чате, который содержал данное "Внешнее событие"
+   */
+  isParentListenerActive() {
+    return this.tourJs.active.listenerId === this.parent_listener;
+  }
 
   /**
    * Callback функция для прослушивания нативных событии JavaScript
    * @param {Event} jsEvent
    */
   nativeEventListener(jsEvent) {
-    if (jsEvent.target.matches(this.selector)) {
+    if (jsEvent.target.matches(this.selector) && this.isParentListenerActive()) {
       this.sendMessage();
 
       jsEvent.target.removeEventListener(this.event, this.callback, false);
+      this.destroy();
     }
   }
 
@@ -177,11 +186,18 @@ class ChangesListener {
    * @param {Event} jsEvent
    */
   nativeClickListener(jsEvent) {
-    if (jsEvent.target.matches(this.selector)) {
+    if (jsEvent.target.matches(this.selector) && this.isParentListenerActive()) {
       this.sendMessage();
 
       document.removeEventListener(this.event, this.callback);
+      this.destroy();
     }
+  }
+  /**
+   * Останавливает слушатели
+   */
+  destroy() {
+    this.tourJs.listenersList.delete(this.answer_id);
   }
 
   IntersectionShowCallback(changeListener) {

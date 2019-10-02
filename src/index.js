@@ -76,6 +76,7 @@ const onboarding = {
   expandCookieKey: 'gw-state',
   active: {
     status: false,
+    listenerId: null,
     condition: {
       get() {
         return this.ConditionEventsListeners.active;
@@ -95,7 +96,7 @@ const onboarding = {
   stylesLoaded: false,
   triggeredCount: 0,
   __observers: {},
-
+  listenersList: new Map(),
   options: {
     env: 'production'
   },
@@ -296,13 +297,36 @@ const onboarding = {
    * @param {Object} e
    */
   __listenForObserveRequests(e) {
-    if (isMessageFromWidget(e) && e.data.action === 'OBSERVE') {
-      const listener = new ChangesListener(e.data);
+    let { data } = e;
 
-      listener.tourJs = this;
-      listener.init();
+    if (isMessageFromWidget(e) && data.action === 'OBSERVE') {
+      // let activeListener = this.active.listenerId;
+      let id = data.answer_id;
+
+      this.__setActiveListener(data.active_listener_id || null);
+
+      if (!this.listenersList.has(id)) {
+
+        let listener = new ChangesListener(data);
+
+        listener.tourJs = this;
+        listener.init();
+        this.__registerListener(listener);
+      }
     }
   },
+  /**
+   * Добавляет эзмпляр ChangesListener в список
+   * @param {ChangesListener} listener
+   */
+  __registerListener(listener) {
+    let id = listener.answer_id;
+
+    if (!this.listenersList.has(id)) {
+      this.listenersList.set(id, listener);
+    }
+  },
+
   /**
    * Если приходят такие экшны, то на основе значения value
    * говорим виджету мигать или нет.
@@ -464,6 +488,13 @@ const onboarding = {
   loadStyles() {
     loadCss(this.stylesFilePath());
     this.stylesLoaded = true;
+  },
+  /**
+   * Задает активный listener_id в чате.
+   * Эта инфомрация нужна чтобы не срабатывали события из прошлых листенеров
+   */
+  __setActiveListener(listenerId) {
+    this.active.listenerId = listenerId;
   },
   /**
    * Подписывается на системные события виджета такие как открыти/закрытие по нажатию на иконку
