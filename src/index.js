@@ -289,7 +289,7 @@ const onboarding = {
     if (isMessageFromWidget(e) && e.data.action === 'ACTION_CLICKED') {
       const { answer_id } = e.data;
 
-      if (answer_id === this.__intro._options.steps[0].highlightEventAnswerId) {
+      if (this.__intro._options.steps.length && answer_id === this.__intro._options.steps[0].highlightEventAnswerId) {
         this.__intro.exit();
       }
     }
