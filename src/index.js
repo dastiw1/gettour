@@ -88,7 +88,7 @@ const onboarding = {
   },
   __intro: null,
   widgetHash: null,
-  autoShowConditions: [],
+  autoShowConditions: {},
   hash: null,
   domain: null,
   block: null,
@@ -232,7 +232,7 @@ const onboarding = {
 
       this.initSystemEventListeners();
 
-      if (this.triggeredCount === 0 && this.options.launchAsExpanded) {
+      if (this.triggeredCount === 0 && this.options.launchAsExpanded && asExpanded) {
         this.expandBlock();
       }
 
@@ -273,8 +273,10 @@ const onboarding = {
      * Слушать изменение URL. watchForMatch запускает по условию loadCondition
      */
     window.addEventListener('locationchange', () => {
+      clearInterval(this.ConditionEventsListeners.interval);
       this.reset();
-      if (this.autoShowConditions.length) {
+
+      if (Object.keys(this.autoShowConditions).length) {
         this.ConditionEventsListeners.watchForMatch();
       }
     });
@@ -306,7 +308,6 @@ const onboarding = {
       this.__setActiveListener(data.active_listener_id || null);
 
       if (!this.listenersList.has(id)) {
-
         let listener = new ChangesListener(data);
 
         listener.tourJs = this;
@@ -439,8 +440,8 @@ const onboarding = {
   reset() {
     this.__intro._options.steps = [];
     this.__intro.refresh();
-    // this.triggeredCount = 0;
     this.destroyWidget();
+    // this.triggeredCount = 0;
   },
   destroyWidget() {
     if (this.block) {
@@ -531,6 +532,8 @@ const onboarding = {
     Cookies.set(this.expandCookieKey, false, {
       expires: 2147483647
     });
+
+    this.__intro.exit();
   },
   expandBlock() {
     this.block.classList.add(this.expandClass);

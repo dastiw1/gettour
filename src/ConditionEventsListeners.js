@@ -8,6 +8,7 @@ class ConditionEventsListeners {
     this.interval = null;
     this.autoConditions = {};
     this.manualConditions = {};
+    this.clickListenerLaunched = false;
     this.metrics = {
       siteEnterTime: new Date(),
       pageEnterTime: new Date()
@@ -25,15 +26,20 @@ class ConditionEventsListeners {
     });
   }
   watchForMatch() {
-    let listenerOptions = {
-      once: true
-    };
-
+    this.active = null;
     this.interval = setInterval(() => {
       this.start();
     }, 1000);
 
-    document.addEventListener('click', this.clickListener.bind(this), listenerOptions);
+    // TODO: make listener removable
+    if (!this.clickListenerLaunched) {
+      let listenerOptions = {
+        once: true
+      };
+
+      document.addEventListener('click', this.clickListener.bind(this), listenerOptions);
+      this.clickListenerLaunched = true;
+    }
   }
 
   testForPathname(cond, path = null) {
@@ -68,31 +74,32 @@ class ConditionEventsListeners {
   }
 
   start() {
-    let matches = 0;
-
     this.filterByPath(this.autoConditions, true).forEach(uuid => {
       let path = window.location.pathname;
       let prevPath = Cookies.get(pathKey);
 
       let cond = this.autoConditions[uuid];
 
-      if (this.active !== uuid && prevPath !== path && this.matchDate(cond)) {
-        window.getTourEventBus.dispatchEvent('ConditionMatched', {
-          uuid
-        });
-        this.active = uuid;
-        Cookies.set(pathKey, path);
-        return;
+      if (prevPath !== path && this.matchDate(cond)) {
+        if (this.active !== uuid) {
+          window.getTourEventBus.dispatchEvent('ConditionMatched', {
+            uuid
+          });
+          this.active = uuid;
+          Cookies.set(pathKey, path);
+          clearInterval(this.interval);
+          return;
+        }
       }
     });
 
-    if (matches === 0 && this.active != null) {
+    /* if (matches === 0 && this.active != null) {
       const regex = new RegExp(this.autoConditions[this.active].page_url.value, 'i');
 
       if (!regex.test(window.location.pathname)) {
         this.active = null;
       }
-    }
+    } */
   }
 
   /**
