@@ -179,6 +179,11 @@ const onboarding = {
         this.__listenForNewMessages.call(this, event);
       });
 
+      // Слушать события наличия новых сообщении
+      window.addEventListener('message', event => {
+        this.__listenForBotInfo.call(this, event);
+      });
+
       // bla
       window.getTourEventBus.addEventListener('ConditionMatched', e => {
         if (
@@ -344,6 +349,23 @@ const onboarding = {
         }
       } else {
         widget.classList.remove(this.hasMsgClass);
+      }
+    }
+  },
+  /**
+   * Получаем объект с данными бота
+   * @param {object} e - Event
+   */
+  __listenForBotInfo(e) {
+    if (isMessageFromWidget(e) && e.data.action === 'BOT_DATA') {
+      console.log(e.data);
+      let widgetAvaImg = document.querySelector('.getchat-widget .getchat-widget__header-ava > img');
+
+      if (widgetAvaImg && e.data.bot.style.avatar) {
+        widgetAvaImg.setAttribute('src', e.data.bot.style.avatar);
+        console.log('ok', widgetAvaImg);
+      } else {
+        console.log('fuck', widgetAvaImg);
       }
     }
   },

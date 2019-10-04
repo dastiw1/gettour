@@ -1,6 +1,6 @@
 {
   "name": "gettour",
-  "version": "0.2.2-rc-3",
+  "version": "0.2.3-alpha",
   "description": "Getchat.me onboarding tour library that works with their autochats",
   "main": "lib/gettour.js",
   "files": [

@@ -1,13 +1,12 @@
 <div class="getchat-widget__wrapper">
   <div class="getchat-widget__content">
     <div class="getchat-widget__header">
-      <div class="getchat-widget__btn getchat-widget__btn--action-menu getchat-widget__btn--icon">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-      <div class="getchat-widget__btn getchat-widget__btn--action-close getchat-widget__btn--icon">
-        <i aria-hidden="true" class="getchat-widget__icon--close"></i>
+      <div class="getchat-widget__header-ava"><img src="/img/unknown_ava.jpg" alt="widget avatar"></div>
+      <div class="getchat-widget__header-actions">
+        <div class="getchat-widget__btn getchat-widget__btn--action-menu getchat-widget__btn--icon"></div>
+        <div class="getchat-widget__btn getchat-widget__btn--action-close getchat-widget__btn--icon">
+          <i aria-hidden="true" class="getchat-widget__icon--close"></i>
+        </div>
       </div>
     </div>
     <iframe src="{{ widgetUrl }}" class="getchat-widget__frame"></iframe>
