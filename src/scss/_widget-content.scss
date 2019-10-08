@@ -48,6 +48,7 @@
     background-color: rgb(255, 255, 255);
     border-radius: 116px;
     z-index: 1;
+    box-shadow: 11px 8px 18px -8px rgba(0, 0, 0, 0.25), -11px 8px 18px -8px rgba(0, 0, 0, 0.25);
     transition: transform 0.5s ease 0s, width 0.5s ease 0s, height 0.5s ease 0s, margin-left 0.5s ease 0s, margin-top 0.5s ease 0s, border-radius 0.5s ease 0s, opacity 0.5s ease 0s;
   }
 

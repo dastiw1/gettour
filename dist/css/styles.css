@@ -59,7 +59,7 @@
     top: 0px;
     content: " ";
     height: 24px;
-    width: 1px;
+    width: 2px;
     background-color: #fff; }
   .getchat-widget__icon--close:before {
     transform: rotate(45deg); }
@@ -113,6 +113,7 @@
     background-color: white;
     border-radius: 116px;
     z-index: 1;
+    box-shadow: 11px 8px 18px -8px rgba(0, 0, 0, 0.25), -11px 8px 18px -8px rgba(0, 0, 0, 0.25);
     transition: transform 0.5s ease 0s, width 0.5s ease 0s, height 0.5s ease 0s, margin-left 0.5s ease 0s, margin-top 0.5s ease 0s, border-radius 0.5s ease 0s, opacity 0.5s ease 0s; }
   .getchat-widget--expanded .getchat-widget__frame {
     height: 600px; }
@@ -153,11 +154,11 @@
   min-width: 0;
   height: 56px;
   width: 56px;
-  background-color: #da29ae;
-  border-color: #da29ae;
+  background: linear-gradient(90deg, #4556AB 0.05%, #6D77E7 100.05%);
+  border-color: #6D77E7;
   z-index: 1;
   cursor: pointer;
-  box-shadow: 0px 0px 8px -2px rgba(0, 0, 0, 0.7); }
+  box-shadow: 0px 0px 9px rgba(0, 0, 0, 0.25); }
   .getchat-widget__launcher__disk {
     position: absolute;
     left: 50%;
@@ -170,9 +171,9 @@
     transform: scale(1);
     opacity: 1; }
   .getchat-widget__launcher__disk-1 {
-    background-color: rgba(200, 65, 130, 0.15); }
+    background-color: rgba(104, 114, 223, 0.3); }
   .getchat-widget__launcher__disk-2 {
-    background-color: rgba(200, 65, 130, 0.3); }
+    background-color: rgba(105, 115, 225, 0.2); }
 
 .getchat-widget__launcher-content {
   display: flex;
@@ -192,7 +193,7 @@
 @keyframes inner-pulse {
   0% {
     transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(226, 43, 150, 0.5); }
+    box-shadow: 0 0 0 0 rgba(104, 114, 223, 0.3); }
   70% {
     transform: scale(1);
     box-shadow: 0 0 0 22px transparent; }
@@ -203,7 +204,7 @@
 @keyframes outer-pulse {
   0% {
     transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(218, 41, 174, 0.25); }
+    box-shadow: 0 0 0 0 rgba(105, 115, 225, 0.2); }
   70% {
     transform: scale(1);
     box-shadow: 0 0 0 44px transparent; }
