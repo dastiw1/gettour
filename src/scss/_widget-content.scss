@@ -54,14 +54,14 @@
 
   &--expanded {
     .getchat-widget__frame {
-      height: 600px;
+      height: 500px;
     }
     .getchat-widget__content {
-      margin: -540px 0 0 -333px;
+      margin: -490px 0 0 -333px;
       display: block;
       width: 320px;
-      height: 600px;
-      border-radius: 5px 5px 0px 0px;
+      height: 552px;
+      border-radius: 10px 10px 0px 0px;
       opacity: 1;
     }
     .getchat-widget__launcher {

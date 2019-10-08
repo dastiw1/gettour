@@ -48,9 +48,24 @@ function isAnyPartOfElementInViewport(el) {
   );
 }
 
+function isInViewport(elem) {
+  var bounding = elem.getBoundingClientRect();
+
+  return (
+    bounding.top >= 0 &&
+    bounding.left >= 0 &&
+    bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+    bounding.right <= (window.innerWidth || document.documentElement.clientWidth)
+  );
+}
+
+function isElementHidden(el) {
+  return el.offsetParent === null;
+}
+
 function isMessageFromWidget(event) {
   // IMPORTANT: Check the origin of the data!
-  if (event.origin.indexOf('https://getchat.me') || event.origin.indexOf('http://localhost:3000')) {
+  if (event.origin.indexOf('https://getchat.me') || event.origin.indexOf('http://178.200.12.241:3000')) {
     // The data has been sent from your site
 
     // The data sent with postMessage is stored in event.data
@@ -293,8 +308,9 @@ const onboarding = {
   __listenForActionClickedRequests(e) {
     if (isMessageFromWidget(e) && e.data.action === 'ACTION_CLICKED') {
       const { answer_id } = e.data;
+      let { steps } = this.__intro._options;
 
-      if (this.__intro._options.steps.length && answer_id === this.__intro._options.steps[0].highlightEventAnswerId) {
+      if (steps && steps.length && answer_id === steps[0].highlightEventAnswerId) {
         this.__intro.exit();
       }
     }
@@ -358,7 +374,6 @@ const onboarding = {
    */
   __listenForBotInfo(e) {
     if (isMessageFromWidget(e) && e.data.action === 'BOT_DATA') {
-
       let widgetAvaImg = document.querySelector('.getchat-widget .getchat-widget__header-ava > img');
 
       if (widgetAvaImg && e.data.bot.style.avatar) {
@@ -377,13 +392,23 @@ const onboarding = {
       }
     }
   },
+  /**
+   *
+   * @param {*} selector
+   */
   __getElementForHighlight(selector) {
     const elements = document.querySelectorAll(selector);
     const elementsArray = Array.from(elements);
 
-    return elementsArray.find(isAnyPartOfElementInViewport);
+    const el = elementsArray.find(isAnyPartOfElementInViewport);
+
+    if (!isElementHidden(el)) {
+      return el;
+    }
+    return null;
   },
   highlight({ selector, closeEvent, highlightEventAnswerId }) {
+    let waitTime = 0.05;
     const step = {
       element: selector,
       fixed: true,
@@ -397,6 +422,17 @@ const onboarding = {
       return;
     }
 
+    const isInVP = isInViewport(introElement);
+
+    console.log('work!', isInVP);
+
+    if (!isInVP) {
+      introElement.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center'
+      });
+      waitTime = 1.5;
+    }
     if (closeEvent === 'chatListenerClick') {
       this.setOptions({
         options: {
@@ -434,7 +470,7 @@ const onboarding = {
 
     setTimeout(() => {
       this.__intro.start(step);
-    }, 50);
+    }, waitTime * 1000);
   },
   sendMessage(msg, msgType = 'trigger', exit = true) {
     if (exit) {
@@ -599,7 +635,7 @@ const onboarding = {
     let url = `${host}/api/the-bot/widget/${this.hash}/data`;
 
     if (this.options.env === 'development') {
-      url = url.replace(host, 'http://localhost:3000');
+      url = url.replace(host, 'http://178.200.12.241:3000');
     }
 
     return new Promise((resolve, reject) => {

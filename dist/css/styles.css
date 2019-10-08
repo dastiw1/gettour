@@ -116,13 +116,13 @@
     box-shadow: 11px 8px 18px -8px rgba(0, 0, 0, 0.25), -11px 8px 18px -8px rgba(0, 0, 0, 0.25);
     transition: transform 0.5s ease 0s, width 0.5s ease 0s, height 0.5s ease 0s, margin-left 0.5s ease 0s, margin-top 0.5s ease 0s, border-radius 0.5s ease 0s, opacity 0.5s ease 0s; }
   .getchat-widget--expanded .getchat-widget__frame {
-    height: 600px; }
+    height: 500px; }
   .getchat-widget--expanded .getchat-widget__content {
-    margin: -540px 0 0 -333px;
+    margin: -490px 0 0 -333px;
     display: block;
     width: 320px;
-    height: 600px;
-    border-radius: 5px 5px 0px 0px;
+    height: 552px;
+    border-radius: 10px 10px 0px 0px;
     opacity: 1; }
   .getchat-widget--expanded .getchat-widget__launcher {
     display: none; }
