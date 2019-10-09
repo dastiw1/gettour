@@ -424,8 +424,6 @@ const onboarding = {
 
     const isInVP = isInViewport(introElement);
 
-    console.log('work!', isInVP);
-
     if (!isInVP) {
       introElement.scrollIntoView({
         behavior: 'smooth',
