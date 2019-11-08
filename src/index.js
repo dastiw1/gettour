@@ -60,7 +60,7 @@ function isInViewport(elem) {
 }
 
 function isElementHidden(el) {
-  return el.offsetParent === null;
+  return typeof el === 'object' && el.offsetParent === null;
 }
 
 function isMessageFromWidget(event) {
@@ -134,10 +134,6 @@ const onboarding = {
 
       this.options = Object.assign(this.options, data.widget_options);
 
-      if (this.domain !== window.location.host) {
-        showError('[Ошибка] Виджет не для этого домена');
-        return;
-      }
       if (!this.active.status) {
         return;
       }
