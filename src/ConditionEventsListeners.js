@@ -25,7 +25,11 @@ class ConditionEventsListeners {
       }
     });
   }
-  watchForMatch() {
+  watchForMatch(first = false) {
+    if (first) {
+      Cookies.remove(pathKey);
+    }
+
     this.active = null;
     this.interval = setInterval(() => {
       this.start();

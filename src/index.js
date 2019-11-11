@@ -141,7 +141,7 @@ const onboarding = {
 
       this.ConditionEventsListeners = new ConditionEventsListeners(this.autoShowConditions);
 
-      this.ConditionEventsListeners.watchForMatch();
+      this.ConditionEventsListeners.watchForMatch(true);
 
       this.__intro.onchange(() => {
         self.__intro.refresh();
