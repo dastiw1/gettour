@@ -14,6 +14,10 @@
   background-color: rgba(255, 255, 255, 0);
   z-index: 10000000;
 
+  &.getchat-widget--preview {
+    transform: scale(0.9) !important;
+  }
+
   &__wrapper {
     position: absolute;
     margin: -50px 0px 0px -50px;
@@ -57,7 +61,7 @@
       height: 500px;
     }
     .getchat-widget__content {
-      margin: -490px 0 0 -333px;
+      margin: -490px 0 0 -319px;
       display: block;
       width: 320px;
       height: 552px;

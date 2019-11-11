@@ -81,6 +81,8 @@
   height: 0px;
   background-color: rgba(255, 255, 255, 0);
   z-index: 10000000; }
+  .getchat-widget.getchat-widget--preview {
+    transform: scale(0.9) !important; }
   .getchat-widget__wrapper {
     position: absolute;
     margin: -50px 0px 0px -50px;
@@ -118,7 +120,7 @@
   .getchat-widget--expanded .getchat-widget__frame {
     height: 500px; }
   .getchat-widget--expanded .getchat-widget__content {
-    margin: -490px 0 0 -333px;
+    margin: -490px 0 0 -319px;
     display: block;
     width: 320px;
     height: 552px;

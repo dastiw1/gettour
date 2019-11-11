@@ -113,7 +113,8 @@ const onboarding = {
   __observers: {},
   listenersList: new Map(),
   options: {
-    env: 'production'
+    env: 'production',
+    preview: false
   },
   ConditionEventsListeners: null,
   /**
@@ -505,7 +506,12 @@ const onboarding = {
    */
   renderWidget(widgetUrl, asExpanded) {
     this.block = document.createElement('div');
+
     this.block.className = 'getchat-widget';
+
+    if (this.options.preview) {
+      this.block.className = `${this.block.className} ${this.block.className}--preview`;
+    }
 
     const vars = {
       widgetUrl,
