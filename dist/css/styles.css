@@ -80,7 +80,13 @@
   width: 0px;
   height: 0px;
   background-color: rgba(255, 255, 255, 0);
-  z-index: 10000000; }
+  z-index: 10000000;
+  /*
+  * Positioning
+  */
+  /**
+  * Expanded
+  */ }
   .getchat-widget.getchat-widget--preview {
     transform: scale(0.9) !important; }
   .getchat-widget__wrapper {
@@ -117,6 +123,12 @@
     z-index: 1;
     box-shadow: 11px 8px 18px -8px rgba(0, 0, 0, 0.25), -11px 8px 18px -8px rgba(0, 0, 0, 0.25);
     transition: transform 0.5s ease 0s, width 0.5s ease 0s, height 0.5s ease 0s, margin-left 0.5s ease 0s, margin-top 0.5s ease 0s, border-radius 0.5s ease 0s, opacity 0.5s ease 0s; }
+  .getchat-widget.getchat-widget--left-bottom {
+    left: 60px; }
+    .getchat-widget.getchat-widget--left-bottom .getchat-widget__content {
+      margin: -490px 0 0 0; }
+    .getchat-widget.getchat-widget--left-bottom .getchat-widget__launcher {
+      margin: -50px 0 0 -6px; }
   .getchat-widget--expanded .getchat-widget__frame {
     height: 500px; }
   .getchat-widget--expanded .getchat-widget__content {

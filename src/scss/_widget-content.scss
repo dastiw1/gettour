@@ -56,6 +56,22 @@
     transition: transform 0.5s ease 0s, width 0.5s ease 0s, height 0.5s ease 0s, margin-left 0.5s ease 0s, margin-top 0.5s ease 0s, border-radius 0.5s ease 0s, opacity 0.5s ease 0s;
   }
 
+  /*
+  * Positioning
+  */
+  &.getchat-widget--left-bottom {
+    left: 60px;
+    .getchat-widget__content {
+      margin: -490px 0 0 0;
+    }
+    .getchat-widget__launcher {
+      margin: -50px 0 0 -6px;
+    }
+  }
+
+  /**
+  * Expanded
+  */
   &--expanded {
     .getchat-widget__frame {
       height: 500px;

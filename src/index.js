@@ -505,17 +505,32 @@ const onboarding = {
    * @returns {void}
    */
   renderWidget(widgetUrl, asExpanded) {
+    let widgetClass = 'getchat-widget';
+    let styles = {};
+
     this.block = document.createElement('div');
 
-    this.block.className = 'getchat-widget';
+    this.block.className = widgetClass;
 
+    // Указать выравнивание
+    if (this.options.alignment) {
+      this.block.className += ` ${widgetClass}--${this.options.alignment}`;
+    }
+
+    // Указать в режиме preview или нет
     if (this.options.preview) {
       this.block.className = `${this.block.className} ${this.block.className}--preview`;
     }
 
+    // Задать background шапки
+    if (this.options.style.color) {
+      styles.header = `background: ${this.options.style.color}`;
+    }
+
     const vars = {
       widgetUrl,
-      asExpanded
+      asExpanded,
+      styles
     };
     const widgetHtml = widgetTemplateLoader(vars);
 
