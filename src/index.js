@@ -65,7 +65,7 @@ function isElementHidden(el) {
 
 function isMessageFromWidget(event) {
   // IMPORTANT: Check the origin of the data!
-  if (event.origin.indexOf('https://getchat.me') || event.origin.indexOf('http://178.200.12.241:3000')) {
+  if (event.origin.indexOf('https://getchat.me') || event.origin.indexOf(this.options.devHost)) {
     // The data has been sent from your site
 
     // The data sent with postMessage is stored in event.data
@@ -114,7 +114,8 @@ const onboarding = {
   listenersList: new Map(),
   options: {
     env: 'production',
-    preview: false
+    preview: false,
+    devHost: 'http://localhost'
   },
   ConditionEventsListeners: null,
   /**
@@ -303,7 +304,7 @@ const onboarding = {
    * @param {object} e
    */
   __listenForActionClickedRequests(e) {
-    if (isMessageFromWidget(e) && e.data.action === 'ACTION_CLICKED') {
+    if (isMessageFromWidget.call(this, e) && e.data.action === 'ACTION_CLICKED') {
       const { answer_id } = e.data;
       let { steps } = this.__intro._options;
 
@@ -319,7 +320,7 @@ const onboarding = {
   __listenForObserveRequests(e) {
     let { data } = e;
 
-    if (isMessageFromWidget(e) && data.action === 'OBSERVE') {
+    if (isMessageFromWidget.call(this, e) && data.action === 'OBSERVE') {
       // let activeListener = this.active.listenerId;
       let id = data.answer_id;
 
@@ -352,7 +353,7 @@ const onboarding = {
    * @param {object} e
    */
   __listenForNewMessages(e) {
-    if (isMessageFromWidget(e) && e.data.action === 'NEW_MESSAGE') {
+    if (isMessageFromWidget.call(this, e) && e.data.action === 'NEW_MESSAGE') {
       const { value } = e.data;
       let widget = document.querySelector('.getchat-widget');
 
@@ -370,7 +371,7 @@ const onboarding = {
    * @param {object} e - Event
    */
   __listenForBotInfo(e) {
-    if (isMessageFromWidget(e) && e.data.action === 'BOT_DATA') {
+    if (isMessageFromWidget.call(this, e) && e.data.action === 'BOT_DATA') {
       let widgetAvaImg = document.querySelector('.getchat-widget .getchat-widget__header-ava > img');
 
       if (widgetAvaImg && e.data.bot.style.avatar) {
@@ -383,7 +384,7 @@ const onboarding = {
    * @param {Object} e
    */
   __listenForHighlightRequests(e) {
-    if (isMessageFromWidget(e) && e.data.action === 'HIGHLIGHT') {
+    if (isMessageFromWidget.call(this, e) && e.data.action === 'HIGHLIGHT') {
       if (e.data.selector) {
         this.highlight(e.data);
       }
@@ -650,7 +651,7 @@ const onboarding = {
     let url = `${host}/api/the-bot/widget/${this.hash}/data`;
 
     if (this.options.env === 'development') {
-      url = url.replace(host, 'http://178.200.12.241:3000');
+      url = url.replace(host, this.options.devHost);
     }
 
     return new Promise((resolve, reject) => {
