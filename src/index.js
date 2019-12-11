@@ -308,7 +308,7 @@ const onboarding = {
       const { answer_id } = e.data;
       let { steps } = this.__intro._options;
 
-      if (steps && steps.length && answer_id === steps[0].highlightEventAnswerId) {
+      if (steps && steps.length && steps.find(s => answer_id === s.highlightEventAnswerId)) {
         this.__intro._options.steps = [];
         this.__intro.exit();
       }
