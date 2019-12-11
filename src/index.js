@@ -309,6 +309,7 @@ const onboarding = {
       let { steps } = this.__intro._options;
 
       if (steps && steps.length && answer_id === steps[0].highlightEventAnswerId) {
+        this.__intro._options.steps = [];
         this.__intro.exit();
       }
     }
