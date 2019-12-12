@@ -1505,6 +1505,12 @@
       _goToStep.call(this, step);
       return this;
     },
+    clearSteps: function() {
+      console.info('CLEARING STEPS')
+      if(this._options.steps) {
+        this._options.steps = [];
+      }
+    },
     addStep: function(options) {
       if (!this._options.steps) {
         this._options.steps = [];

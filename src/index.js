@@ -309,7 +309,7 @@ const onboarding = {
       let { steps } = this.__intro._options;
 
       if (steps && steps.length && steps.find(s => answer_id === s.highlightEventAnswerId)) {
-        this.__intro._options.steps = [];
+        // this.__intro._options.steps = [];
         this.__intro.exit();
       }
     }
@@ -447,21 +447,22 @@ const onboarding = {
         }
       });
     }
-    // Clear before add step
-    this.__intro._options.steps = false;
-    // Add step
     this.__intro.addStep(step);
 
     // Listen to event
-    introElement.addEventListener(
-      closeEvent,
-      () => {
-        this.__intro.exit();
-      },
-      {
-        once: true
-      }
-    );
+    if (closeEvent !== 'chatListenerClick') {
+      introElement.addEventListener(
+        closeEvent,
+        () => {
+          this.__intro.exit();
+          this.__intro.clearSteps();
+        },
+        {
+          once: true
+        }
+      );
+    }
+
     // Close
     if (this.__intro._introItems.length) {
       this.__intro.goToStepNumber(0);
