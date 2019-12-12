@@ -447,6 +447,9 @@ const onboarding = {
         }
       });
     }
+    // Clear before add step
+    this.__intro._options.steps = false;
+    // Add step
     this.__intro.addStep(step);
 
     // Listen to event
