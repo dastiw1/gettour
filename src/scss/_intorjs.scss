@@ -1,136 +1,195 @@
-
 /**
   *  IntroJS Styles
   */
-  .introjs-overlay {
-    position: absolute;
-    box-sizing: content-box;
-    /* z-index: 999999; */
-    z-index: 9999998;
-    background-color: #000;
-    opacity: 0;
-    background: -moz-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.4) 0, rgba(0, 0, 0, 0.9) 100%);
-    background: -webkit-gradient(radial, center center, 0, center center, 100%, color-stop(0, rgba(0, 0, 0, 0.4)), color-stop(100%, rgba(0, 0, 0, 0.9)));
-    background: -webkit-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.4) 0, rgba(0, 0, 0, 0.9) 100%);
-    background: -o-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.4) 0, rgba(0, 0, 0, 0.9) 100%);
-    background: -ms-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.4) 0, rgba(0, 0, 0, 0.9) 100%);
-    background: radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.4) 0, rgba(0, 0, 0, 0.9) 100%);
-    -webkit-transition: all 0.3s ease-out;
-    -moz-transition: all 0.3s ease-out;
-    -ms-transition: all 0.3s ease-out;
-    -o-transition: all 0.3s ease-out;
-    transition: all 0.3s ease-out;
+.introjs-overlay {
+  position: absolute;
+  box-sizing: content-box;
+  /* z-index: 999999; */
+  z-index: 9999998;
+  background-color: #000;
+  opacity: 0;
+  background: -moz-radial-gradient(
+    center,
+    ellipse farthest-corner,
+    rgba(0, 0, 0, 0.4) 0,
+    rgba(0, 0, 0, 0.9) 100%
+  );
+  background: -webkit-gradient(
+    radial,
+    center center,
+    0,
+    center center,
+    100%,
+    color-stop(0, rgba(0, 0, 0, 0.4)),
+    color-stop(100%, rgba(0, 0, 0, 0.9))
+  );
+  background: -webkit-radial-gradient(
+    center,
+    ellipse farthest-corner,
+    rgba(0, 0, 0, 0.4) 0,
+    rgba(0, 0, 0, 0.9) 100%
+  );
+  background: -o-radial-gradient(
+    center,
+    ellipse farthest-corner,
+    rgba(0, 0, 0, 0.4) 0,
+    rgba(0, 0, 0, 0.9) 100%
+  );
+  background: -ms-radial-gradient(
+    center,
+    ellipse farthest-corner,
+    rgba(0, 0, 0, 0.4) 0,
+    rgba(0, 0, 0, 0.9) 100%
+  );
+  background: radial-gradient(
+    center,
+    ellipse farthest-corner,
+    rgba(0, 0, 0, 0.4) 0,
+    rgba(0, 0, 0, 0.9) 100%
+  );
+  -webkit-transition: all 0.3s ease-out;
+  -moz-transition: all 0.3s ease-out;
+  -ms-transition: all 0.3s ease-out;
+  -o-transition: all 0.3s ease-out;
+  transition: all 0.3s ease-out;
+}
+.introjs-fixParent {
+  z-index: auto !important;
+  opacity: 1 !important;
+  -webkit-transform: none !important;
+  -moz-transform: none !important;
+  -ms-transform: none !important;
+  -o-transform: none !important;
+  transform: none !important;
+}
+aside.introjs-fixParent {
+  z-index: 9999998 !important;
+}
+.introjs-fixParent * {
+  will-change: inherit !important;
+}
+.introjs-showElement,
+tr.introjs-showElement > td,
+tr.introjs-showElement > th {
+  z-index: 9999999 !important;
+}
+.introjs-disableInteraction {
+  z-index: 99999999 !important;
+  position: absolute;
+  background-color: #fff;
+  opacity: 0;
+}
+.introjs-relativePosition,
+tr.introjs-showElement > td,
+tr.introjs-showElement > th {
+  position: relative;
+}
+.introjs-helperLayer {
+  box-sizing: content-box;
+  position: absolute;
+  z-index: 9999998;
+  background-color: #fff;
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid #777;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.4);
+  -webkit-transition: all 0.3s ease-out;
+  -moz-transition: all 0.3s ease-out;
+  -ms-transition: all 0.3s ease-out;
+  -o-transition: all 0.3s ease-out;
+  transition: all 0.3s ease-out;
+}
+.introjs-tooltipReferenceLayer {
+  box-sizing: content-box;
+  position: absolute;
+  visibility: hidden;
+  z-index: 100000000;
+  background-color: transparent;
+  -webkit-transition: all 0.3s ease-out;
+  -moz-transition: all 0.3s ease-out;
+  -ms-transition: all 0.3s ease-out;
+  -o-transition: all 0.3s ease-out;
+  transition: all 0.3s ease-out;
+}
+.introjs-helperLayer *,
+.introjs-helperLayer :after,
+.introjs-helperLayer :before {
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+  -ms-box-sizing: content-box;
+  -o-box-sizing: content-box;
+  box-sizing: content-box;
+}
+
+.introjs-tooltip {
+  box-sizing: content-box;
+  position: absolute;
+  visibility: visible;
+  padding: 10px;
+  background-color: #fff;
+  min-width: 300px;
+  max-width: 320px;
+  border-radius: 3px;
+  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.4);
+  -webkit-transition: opacity 0.1s ease-out;
+  -moz-transition: opacity 0.1s ease-out;
+  -ms-transition: opacity 0.1s ease-out;
+  -o-transition: opacity 0.1s ease-out;
+  transition: opacity 0.1s ease-out;
+}
+
+.introjs-disabled,
+.introjs-disabled:focus,
+.introjs-disabled:hover {
+  color: #9a9a9a;
+  border-color: #d4d4d4;
+  box-shadow: none;
+  cursor: default;
+  background-color: #f4f4f4;
+  background-image: none;
+  text-decoration: none;
+}
+.introjs-hidden {
+  display: none;
+}
+
+.introjsFloatingElement {
+  position: absolute;
+  height: 0;
+  width: 0;
+  left: 50%;
+  top: 50%;
+}
+.introjs-fixedTooltip {
+  position: fixed;
+}
+
+.introjs-tooltipArrow {
+  z-index: 9999999;
+  &::before {
+    display: block;
+    content: '';
+    background: url('/assets/img/arrow.png') center center no-repeat;
+    background-size: contain;
+    width: 120px;
+    height: 120px;
   }
-  .introjs-fixParent {
-    z-index: auto !important;
-    opacity: 1 !important;
-    -webkit-transform: none !important;
-    -moz-transform: none !important;
-    -ms-transform: none !important;
-    -o-transform: none !important;
-    transform: none !important;
+
+  &[data-popper-placement='top']:before {
+    transform: rotate(260deg) scale(1, -1);
   }
-  aside.introjs-fixParent {
-    z-index: 9999998 !important;
+
+  &[data-popper-placement='bottom']:before {
+    transform: rotate(110deg);
   }
-  .introjs-fixParent * {
-    will-change: inherit !important;
+
+  &[data-popper-placement='left']:before {
+    transform: rotate(185deg);
   }
-  .introjs-showElement,
-  tr.introjs-showElement > td,
-  tr.introjs-showElement > th {
-    z-index: 9999999 !important;
+
+  &[data-popper-placement='right']:before {
+    transform: rotate(-11deg) scale(1, -1);
   }
-  .introjs-disableInteraction {
-    z-index: 99999999 !important;
-    position: absolute;
-    background-color: #fff;
-    opacity: 0;
-  }
-  .introjs-relativePosition,
-  tr.introjs-showElement > td,
-  tr.introjs-showElement > th {
-    position: relative;
-  }
-  .introjs-helperLayer {
-    box-sizing: content-box;
-    position: absolute;
-    z-index: 9999998;
-    background-color: #fff;
-    background-color: rgba(255, 255, 255, 0.7);
-    border: 1px solid #777;
-    border: 1px solid rgba(0, 0, 0, 0.5);
-    border-radius: 4px;
-    cursor: pointer;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.4);
-    -webkit-transition: all 0.3s ease-out;
-    -moz-transition: all 0.3s ease-out;
-    -ms-transition: all 0.3s ease-out;
-    -o-transition: all 0.3s ease-out;
-    transition: all 0.3s ease-out;
-  }
-  .introjs-tooltipReferenceLayer {
-    box-sizing: content-box;
-    position: absolute;
-    visibility: hidden;
-    z-index: 100000000;
-    background-color: transparent;
-    -webkit-transition: all 0.3s ease-out;
-    -moz-transition: all 0.3s ease-out;
-    -ms-transition: all 0.3s ease-out;
-    -o-transition: all 0.3s ease-out;
-    transition: all 0.3s ease-out;
-  }
-  .introjs-helperLayer *,
-  .introjs-helperLayer :after,
-  .introjs-helperLayer :before {
-    -webkit-box-sizing: content-box;
-    -moz-box-sizing: content-box;
-    -ms-box-sizing: content-box;
-    -o-box-sizing: content-box;
-    box-sizing: content-box;
-  }
-  
-  .introjs-tooltip {
-    box-sizing: content-box;
-    position: absolute;
-    visibility: visible;
-    padding: 10px;
-    background-color: #fff;
-    min-width: 300px;
-    max-width: 320px;
-    border-radius: 3px;
-    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.4);
-    -webkit-transition: opacity 0.1s ease-out;
-    -moz-transition: opacity 0.1s ease-out;
-    -ms-transition: opacity 0.1s ease-out;
-    -o-transition: opacity 0.1s ease-out;
-    transition: opacity 0.1s ease-out;
-  }
-  
-  .introjs-disabled,
-  .introjs-disabled:focus,
-  .introjs-disabled:hover {
-    color: #9a9a9a;
-    border-color: #d4d4d4;
-    box-shadow: none;
-    cursor: default;
-    background-color: #f4f4f4;
-    background-image: none;
-    text-decoration: none;
-  }
-  .introjs-hidden {
-    display: none;
-  }
-  
-  .introjsFloatingElement {
-    position: absolute;
-    height: 0;
-    width: 0;
-    left: 50%;
-    top: 50%;
-  }
-  .introjs-fixedTooltip {
-    position: fixed;
-  }
-  
+}

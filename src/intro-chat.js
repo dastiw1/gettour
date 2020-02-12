@@ -1,3 +1,5 @@
+import { createPopper } from '@popperjs/core';
+// import offsetModifier from '@popperjs/core/lib/modifiers/offset';
 /* eslint-disable */
 /**
  * Intro.js v2.9.3  fork. only highlight element
@@ -298,7 +300,7 @@
 
     _showElement.call(this, nextStep);
   }
- 
+
   /**
    * Update placement of the intro objects on the screen
    * @api private
@@ -376,6 +378,12 @@
       referenceLayer.parentNode.removeChild(referenceLayer);
     }
 
+    // remove arrow
+    let arrowElement = document.querySelector('.introjs-tooltipArrow');
+    if (arrowElement) {
+      arrowElement.remove();
+    }
+
     //remove disableInteractionLayer
     var disableInteractionLayer = targetElement.querySelector(
       '.introjs-disableInteraction'
@@ -411,213 +419,27 @@
     this._currentStep = undefined;
   }
 
-  /**
-   * Set tooltip left so it doesn't go off the right side of the window
-   *
-   * @return boolean true, if tooltipLayerStyleLeft is ok.  false, otherwise.
-   */
-  function _checkRight(
-    targetOffset,
-    tooltipLayerStyleLeft,
-    tooltipOffset,
-    windowSize,
-    tooltipLayer
-  ) {
-    if (
-      targetOffset.left + tooltipLayerStyleLeft + tooltipOffset.width >
-      windowSize.width
-    ) {
-      // off the right side of the window
-      tooltipLayer.style.left =
-        windowSize.width - tooltipOffset.width - targetOffset.left + 'px';
-      return false;
-    }
-    tooltipLayer.style.left = tooltipLayerStyleLeft + 'px';
-    return true;
-  }
+  function _placeArrow(targetElement) {
+    let arrowElement = document.querySelector('.introjs-tooltipArrow');
 
-  /**
-   * Set tooltip right so it doesn't go off the left side of the window
-   *
-   * @return boolean true, if tooltipLayerStyleRight is ok.  false, otherwise.
-   */
-  function _checkLeft(
-    targetOffset,
-    tooltipLayerStyleRight,
-    tooltipOffset,
-    tooltipLayer
-  ) {
-    if (
-      targetOffset.left +
-        targetOffset.width -
-        tooltipLayerStyleRight -
-        tooltipOffset.width <
-      0
-    ) {
-      // off the left side of the window
-      tooltipLayer.style.left = -targetOffset.left + 'px';
-      return false;
-    }
-    tooltipLayer.style.right = tooltipLayerStyleRight + 'px';
-    return true;
-  }
-
-  /**
-   * Determines the position of the tooltip based on the position precedence and availability
-   * of screen space.
-   *
-   * @param {Object}    targetElement
-   * @param {Object}    tooltipLayer
-   * @param {String}    desiredTooltipPosition
-   * @return {String}   calculatedPosition
-   */
-  function _determineAutoPosition(
-    targetElement,
-    tooltipLayer,
-    desiredTooltipPosition
-  ) {
-    // Take a clone of position precedence. These will be the available
-    var possiblePositions = this._options.positionPrecedence.slice();
-
-    var windowSize = _getWinSize();
-    var tooltipHeight = _getOffset(tooltipLayer).height + 10;
-    var tooltipWidth = _getOffset(tooltipLayer).width + 20;
-    var targetElementRect = targetElement.getBoundingClientRect();
-
-    // If we check all the possible areas, and there are no valid places for the tooltip, the element
-    // must take up most of the screen real estate. Show the tooltip floating in the middle of the screen.
-    var calculatedPosition = 'floating';
-
-    /*
-     * auto determine position
-     */
-
-    // Check for space below
-    if (
-      targetElementRect.bottom + tooltipHeight + tooltipHeight >
-      windowSize.height
-    ) {
-      _removeEntry(possiblePositions, 'bottom');
+    if (arrowElement == null) {
+      arrowElement = document.createElement('div');
+      arrowElement.className = 'introjs-tooltipArrow';
     }
 
-    // Check for space above
-    if (targetElementRect.top - tooltipHeight < 0) {
-      _removeEntry(possiblePositions, 'top');
-    }
+    document.body.appendChild(arrowElement);
 
-    // Check for space to the right
-    if (targetElementRect.right + tooltipWidth > windowSize.width) {
-      _removeEntry(possiblePositions, 'right');
-    }
-
-    // Check for space to the left
-    if (targetElementRect.left - tooltipWidth < 0) {
-      _removeEntry(possiblePositions, 'left');
-    }
-
-    // @var {String}  ex: 'right-aligned'
-    var desiredAlignment = (function(pos) {
-      var hyphenIndex = pos.indexOf('-');
-      if (hyphenIndex !== -1) {
-        // has alignment
-        return pos.substr(hyphenIndex);
-      }
-      return '';
-    })(desiredTooltipPosition || '');
-
-    // strip alignment from position
-    if (desiredTooltipPosition) {
-      // ex: "bottom-right-aligned"
-      // should return 'bottom'
-      desiredTooltipPosition = desiredTooltipPosition.split('-')[0];
-    }
-
-    if (possiblePositions.length) {
-      if (
-        desiredTooltipPosition !== 'auto' &&
-        possiblePositions.indexOf(desiredTooltipPosition) > -1
-      ) {
-        // If the requested position is in the list, choose that
-        calculatedPosition = desiredTooltipPosition;
-      } else {
-        // Pick the first valid position, in order
-        calculatedPosition = possiblePositions[0];
-      }
-    }
-
-    // only top and bottom positions have optional alignments
-    if (['top', 'bottom'].indexOf(calculatedPosition) !== -1) {
-      calculatedPosition += _determineAutoAlignment(
-        targetElementRect.left,
-        tooltipWidth,
-        windowSize,
-        desiredAlignment
-      );
-    }
-
-    return calculatedPosition;
-  }
-
-  /**
-   * auto-determine alignment
-   * @param {Integer}  offsetLeft
-   * @param {Integer}  tooltipWidth
-   * @param {Object}   windowSize
-   * @param {String}   desiredAlignment
-   * @return {String}  calculatedAlignment
-   */
-  function _determineAutoAlignment(
-    offsetLeft,
-    tooltipWidth,
-    windowSize,
-    desiredAlignment
-  ) {
-    var halfTooltipWidth = tooltipWidth / 2,
-      winWidth = Math.min(windowSize.width, window.screen.width),
-      possibleAlignments = [
-        '-left-aligned',
-        '-middle-aligned',
-        '-right-aligned'
-      ],
-      calculatedAlignment = '';
-
-    // valid left must be at least a tooltipWidth
-    // away from right side
-    if (winWidth - offsetLeft < tooltipWidth) {
-      _removeEntry(possibleAlignments, '-left-aligned');
-    }
-
-    // valid middle must be at least half
-    // width away from both sides
-    if (
-      offsetLeft < halfTooltipWidth ||
-      winWidth - offsetLeft < halfTooltipWidth
-    ) {
-      _removeEntry(possibleAlignments, '-middle-aligned');
-    }
-
-    // valid right must be at least a tooltipWidth
-    // width away from left side
-    if (offsetLeft < tooltipWidth) {
-      _removeEntry(possibleAlignments, '-right-aligned');
-    }
-
-    if (possibleAlignments.length) {
-      if (possibleAlignments.indexOf(desiredAlignment) !== -1) {
-        // the desired alignment is valid
-        calculatedAlignment = desiredAlignment;
-      } else {
-        // pick the first valid position, in order
-        calculatedAlignment = possibleAlignments[0];
-      }
-    } else {
-      // if screen width is too small
-      // for ANY alignment, middle is
-      // probably the best for visibility
-      calculatedAlignment = '-middle-aligned';
-    }
-
-    return calculatedAlignment;
+    let arrow = createPopper(targetElement, arrowElement, {
+      placement: 'auto',
+      modifiers: [
+        {
+          name: 'offset',
+          options: {
+            offset: [10, 10]
+          }
+        }
+      ]
+    });
   }
 
   /**
@@ -703,17 +525,6 @@
   }
 
   /**
-   * Setting anchors to behave like buttons
-   *
-   * @api private
-   * @method _setAnchorAsButton
-   */
-  function _setAnchorAsButton(anchor) {
-    anchor.setAttribute('role', 'button');
-    anchor.tabIndex = 0;
-  }
-
-  /**
    * @api private
    * @method _getDimensions
    */
@@ -731,10 +542,12 @@
    * @method _setClipPathOfHelper
    */
   function _setClipPathOfHelper(helperLayer) {
+    let arrow = document.querySelector('.introjs-tooltipArrow');
     // костыль const step = this._introItems[this._currentStep];
     const step = this._introItems[0];
-    
+
     const overlay = document.querySelector('.introjs-overlay');
+
     if (step.fixed) {
       const { width, height, left, top } = _getDimensions.call(
         this,
@@ -790,9 +603,15 @@
       }
 
       helperLayer.style.visibility = 'hidden';
+      if (arrow) {
+        arrow.style.visibility = 'visible';
+      }
     } else {
       overlay.style.clipPath = '';
-      helperLayer.style.visibility = 'visible';
+      helperLayer.style.visibility = '';
+      if (arrow) {
+        arrow.style.visibility = 'hidden';
+      }
     }
   }
 
@@ -826,8 +645,6 @@
     }
 
     if (oldHelperLayer !== null) {
-      
-
       // scroll to element
       scrollParent = _getScrollParent(targetElement.element);
 
@@ -839,6 +656,9 @@
       // set new position to helper layer
       _setHelperLayerPosition.call(self, oldHelperLayer);
       _setHelperLayerPosition.call(self, oldReferenceLayer);
+
+      // place arrow
+      _placeArrow.call(self, targetElement.element);
 
       //remove `introjs-fixParent` class from the elements
       var fixParents = document.querySelectorAll('.introjs-fixParent');
@@ -867,6 +687,9 @@
       helperLayer.className = highlightClass;
       referenceLayer.className = 'introjs-tooltipReferenceLayer';
 
+      // place arrow
+      _placeArrow.call(self, targetElement.element);
+
       // scroll to element
       scrollParent = _getScrollParent(targetElement.element);
 
@@ -882,7 +705,7 @@
       //add helper layer to target element
       this._targetElement.appendChild(helperLayer);
       this._targetElement.appendChild(referenceLayer);
- 
+
       // change the scroll of the window, if needed
       _scrollTo.call(this, targetElement.scrollTo, targetElement);
 
@@ -907,7 +730,6 @@
     if (typeof this._introAfterChangeCallback !== 'undefined') {
       this._introAfterChangeCallback.call(this, targetElement.element);
     }
-    
   }
 
   /**
@@ -1361,6 +1183,25 @@
   }
 
   /**
+   * Get html  element parents array;
+   * @api private
+   * @method _getElementParents
+   * @param {HTMLElement} elem
+   * @returns Array that contains parent elements
+   */
+  function _getElementParents(elem) {
+    // Set up a parent array
+    var parents = [];
+
+    // Push each parent element to the array
+    for (; elem && elem !== document; elem = elem.parentNode) {
+      parents.push(elem);
+    }
+
+    // Return our parent array
+    return parents;
+  }
+  /**
    * Get an element position on the page
    * Thanks to `meouw`: http://stackoverflow.com/a/442474/375966
    *
@@ -1375,6 +1216,14 @@
     var scrollTop = window.pageYOffset || docEl.scrollTop || body.scrollTop;
     var scrollLeft = window.pageXOffset || docEl.scrollLeft || body.scrollLeft;
     var x = element.getBoundingClientRect();
+    var parents = _getElementParents(element);
+    var elemHasFixedParent =
+      parents.filter(parentEl => {
+        return getComputedStyle(parentEl).position === 'fixed';
+      }).length > 0;
+    if (getComputedStyle(element).position === 'fixed' || elemHasFixedParent) {
+      scrollTop = 0;
+    }
     return {
       top: x.top + scrollTop,
       width: x.width,
@@ -1506,10 +1355,10 @@
       return this;
     },
     clearSteps: function() {
-      console.info('CLEARING STEPS')
-      if(this._options.steps) {
+      if (this._options.steps) {
         this._options.steps = [];
       }
+      console.info('CLEARING STEPS', this._options.steps);
     },
     addStep: function(options) {
       if (!this._options.steps) {
@@ -1517,9 +1366,8 @@
       }
 
       this._options.steps.push(options);
-
       return this;
-    }, 
+    },
     goToStepNumber: function(step) {
       _goToStepNumber.call(this, step);
 

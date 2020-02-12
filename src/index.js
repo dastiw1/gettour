@@ -11,8 +11,8 @@ import introJs from './intro-chat';
 import ChangesListener from './ChangesListener';
 import ConditionEventsListeners from './ConditionEventsListeners';
 import EventBus from './EventBus';
-import { showError, loadCss } from './utils';
-
+import { showError, loadCss, isObject } from './utils';
+import widgetStyles from './functions/widgetStyles';
 const widgetTemplateLoader = require('./templates/widget.mst');
 
 window.getTourEventBus = new EventBus();
@@ -54,8 +54,10 @@ function isInViewport(elem) {
   return (
     bounding.top >= 0 &&
     bounding.left >= 0 &&
-    bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-    bounding.right <= (window.innerWidth || document.documentElement.clientWidth)
+    bounding.bottom <=
+      (window.innerHeight || document.documentElement.clientHeight) &&
+    bounding.right <=
+      (window.innerWidth || document.documentElement.clientWidth)
   );
 }
 
@@ -65,11 +67,17 @@ function isElementHidden(el) {
 
 function isMessageFromWidget(event) {
   // IMPORTANT: Check the origin of the data!
-  if (event.origin.indexOf('https://getchat.me') || event.origin.indexOf(this.options.devHost)) {
+  if (
+    event.origin.indexOf('https://getchat.me') ||
+    event.origin.indexOf(this.options.devHost)
+  ) {
     // The data has been sent from your site
 
     // The data sent with postMessage is stored in event.data
-    if (typeof event.data !== 'object' || event.data.source !== 'getchat-widget') {
+    if (
+      typeof event.data !== 'object' ||
+      event.data.source !== 'getchat-widget'
+    ) {
       return false;
     }
 
@@ -80,13 +88,54 @@ function isMessageFromWidget(event) {
 }
 
 const STYLEPATH = {
-  development: '/css/gettour.min.css',
+  development: 'http://gettour/dist/css/styles.css',
   production: 'https://cdn.jsdelivr.net/npm/gettour/dist/css/styles.min.css'
 };
 
+/**
+ * Ловушка для парметров свойства options.
+ */
+let optionsChangesHandler = {
+  set(target, prop, val) {
+    target[prop] = val;
+    switch (prop) {
+      case 'alignment':
+        // eslint-disable-next-line no-use-before-define
+        onboarding.changeWidgetAlignment(val);
+        break;
+
+      default:
+        break;
+    }
+    return true;
+  }
+};
+/**
+ * Ловушка для параметров свойства states
+ */
+let statesChangesHandlers = {
+  set(target, prop, val) {
+    target[prop] = val;
+    switch (prop) {
+      case 'isLoading':
+        // eslint-disable-next-line no-use-before-define
+        onboarding.loadingStateToggle(val);
+        break;
+
+      default:
+        break;
+    }
+    return true;
+  }
+};
+/**
+ * Основной объект Gettour
+ */
 const onboarding = {
+  rootClass: 'getchat-widget',
   selector: '.getchat-widget__frame',
   expandClass: 'getchat-widget--expanded',
+  loadingClass: 'getchat-widget--loading',
   hasMsgClass: 'getchat-widget--has-msgs',
   expandCookieKey: 'gw-state',
   active: {
@@ -101,8 +150,14 @@ const onboarding = {
       }
     }
   },
+  _states: new Proxy(
+    {
+      isLoading: false // Boolean
+    },
+    statesChangesHandlers
+  ),
   __intro: null,
-  widgetHash: null,
+  widgetHash: null, // String
   autoShowConditions: {},
   hash: null,
   domain: null,
@@ -112,12 +167,27 @@ const onboarding = {
   triggeredCount: 0,
   __observers: {},
   listenersList: new Map(),
-  options: {
-    env: 'production',
-    preview: false,
-    devHost: 'http://localhost'
-  },
+
+  options: new Proxy(
+    {
+      env: 'production',
+      preview: false,
+      devHost: 'http://localhost',
+      alignment: 'left-bottom'
+    },
+    optionsChangesHandler
+  ),
   ConditionEventsListeners: null,
+
+  /* ================================
+          Inject functionals here
+   =====================================*/
+  ...widgetStyles,
+  /**
+   * =============================
+   * METHODS
+   * ===============================
+   */
   /**
    *
    * @param {string} hash
@@ -127,21 +197,31 @@ const onboarding = {
     const self = this;
 
     this.hash = hash;
-    this.options = Object.assign(this.options, options);
+    // this.options = Object.assign(this.options, options);
+    Object.keys(options).forEach(key => {
+      this.options[key] = options[key];
+    });
 
     this.loadWidgetData().then(data => {
       this.domain = data.domain;
       this.active.status = data.widget_active;
       this.autoShowConditions = data.conditions;
 
-      this.options = Object.assign(this.options, data.widget_options);
+      // this.options = Object.assign(this.options, data.widget_options);
+      if (isObject(data.widget_options)) {
+        Object.keys(data.widget_options).forEach(key => {
+          this.options[key] = data.widget_options[key];
+        });
+      }
 
       if (!this.active.status) {
         return;
       }
       this.__intro = introJs();
 
-      this.ConditionEventsListeners = new ConditionEventsListeners(this.autoShowConditions);
+      this.ConditionEventsListeners = new ConditionEventsListeners(
+        this.autoShowConditions
+      );
 
       this.ConditionEventsListeners.watchForMatch(true);
 
@@ -157,7 +237,9 @@ const onboarding = {
         }
 
         //
-        const closeBtn = document.querySelector('.getchat-widget > .getchat-widget__btn--icon');
+        const closeBtn = document.querySelector(
+          '.getchat-widget > .getchat-widget__btn--icon'
+        );
 
         if (closeBtn) {
           closeBtn.style.display = 'none';
@@ -165,7 +247,9 @@ const onboarding = {
       });
 
       this.__intro.onexit(() => {
-        const closeBtn = document.querySelector('.getchat-widget > .getchat-widget__btn--icon');
+        const closeBtn = document.querySelector(
+          '.getchat-widget > .getchat-widget__btn--icon'
+        );
 
         if (closeBtn) {
           closeBtn.style.display = 'inline-flex';
@@ -185,6 +269,11 @@ const onboarding = {
       // Слушать события для Observer-а
       window.addEventListener('message', event => {
         this.__listenForObserveRequests.call(this, event);
+      });
+
+      // Слушать события для EVALUATE для выполнения userScript
+      window.addEventListener('message', event => {
+        this.__listenForUserScriptEvaluateRequests.call(this, event);
       });
 
       // Слушать события наличия новых сообщении
@@ -212,7 +301,7 @@ const onboarding = {
             this.expandBlock();
           }
         } else {
-          this.loadCondition(e);
+          this.loadCondition(e.detail.uuid);
         }
       });
 
@@ -231,9 +320,9 @@ const onboarding = {
    * Подгрузка виджета если попадает под одну из условии
    */
 
-  loadCondition(event) {
+  loadCondition(uuid) {
     if (event != null) {
-      this.active.condition = event.detail.uuid;
+      this.active.condition = uuid;
     } else {
       this.active.condition = null;
     }
@@ -242,15 +331,24 @@ const onboarding = {
       let oldVal = Cookies.get(this.expandCookieKey);
       let asExpanded = oldVal === 'true';
 
-      this.renderWidget(this.autoShowConditions[this.active.condition].link, asExpanded);
+      if (this.autoShowConditions[this.active.condition] == null) {
+        console.error('Attempt to load incorrect action uuid: ' + uuid);
+        return;
+      }
+      this.renderWidget(
+        this.autoShowConditions[this.active.condition].link,
+        asExpanded
+      );
 
       if (!this.stylesLoaded) {
         this.loadStyles();
       }
 
-      this.initSystemEventListeners();
-
-      if (this.triggeredCount === 0 && this.options.launchAsExpanded && asExpanded) {
+      if (
+        this.triggeredCount === 0 &&
+        this.options.launchAsExpanded &&
+        asExpanded
+      ) {
         this.expandBlock();
       }
 
@@ -304,13 +402,20 @@ const onboarding = {
    * @param {object} e
    */
   __listenForActionClickedRequests(e) {
-    if (isMessageFromWidget.call(this, e) && e.data.action === 'ACTION_CLICKED') {
+    if (
+      isMessageFromWidget.call(this, e) &&
+      e.data.action === 'ACTION_CLICKED'
+    ) {
       const { answer_id } = e.data;
       let { steps } = this.__intro._options;
 
-      if (steps && steps.length && steps.find(s => answer_id === s.highlightEventAnswerId)) {
-        // this.__intro._options.steps = [];
+      if (
+        steps &&
+        steps.length &&
+        steps.find(s => answer_id === s.highlightEventAnswerId)
+      ) {
         this.__intro.exit();
+        this.__intro.clearSteps();
       }
     }
   },
@@ -337,7 +442,19 @@ const onboarding = {
     }
   },
   /**
-   * Добавляет эзмпляр ChangesListener в список
+   * Запустить прослушнивание событии userScript
+   * @param {Object} e
+   */
+  __listenForUserScriptEvaluateRequests(e) {
+    let { data } = e;
+
+    if (isMessageFromWidget.call(this, e) && data.action === 'EVALUATE') {
+      // eslint-disable-next-line no-eval
+      eval(data.script);
+    }
+  },
+  /**
+   * Добавляет экземпляр ChangesListener в список
    * @param {ChangesListener} listener
    */
   __registerListener(listener) {
@@ -359,7 +476,10 @@ const onboarding = {
       let widget = document.querySelector('.getchat-widget');
 
       if (value) {
-        if (!widget.classList.contains(this.hasMsgClass) && !widget.classList.contains(this.expandClass)) {
+        if (
+          !widget.classList.contains(this.hasMsgClass) &&
+          !widget.classList.contains(this.expandClass)
+        ) {
           widget.classList.add(this.hasMsgClass);
         }
       } else {
@@ -373,7 +493,9 @@ const onboarding = {
    */
   __listenForBotInfo(e) {
     if (isMessageFromWidget.call(this, e) && e.data.action === 'BOT_DATA') {
-      let widgetAvaImg = document.querySelector('.getchat-widget .getchat-widget__header-ava > img');
+      let widgetAvaImg = document.querySelector(
+        '.getchat-widget .getchat-widget__header-ava > img'
+      );
 
       if (widgetAvaImg && e.data.bot.style.avatar) {
         widgetAvaImg.setAttribute('src', e.data.bot.style.avatar);
@@ -506,13 +628,15 @@ const onboarding = {
   },
   /**
    *
-   * @param {string} widgetUrl
+   * @param {string} chatUrl
    * @param {boolean} asExpanded
    * @returns {void}
    */
-  renderWidget(widgetUrl, asExpanded) {
+  renderWidget(chatUrl, asExpanded) {
     let widgetClass = 'getchat-widget';
     let styles = {};
+
+    this.startLoading();
 
     this.block = document.createElement('div');
 
@@ -525,7 +649,7 @@ const onboarding = {
 
     // Указать в режиме preview или нет
     if (this.options.preview) {
-      this.block.className = `${this.block.className} ${this.block.className}--preview`;
+      this.block.className += `${widgetClass}--preview`;
     }
 
     // Задать background шапки
@@ -533,11 +657,14 @@ const onboarding = {
       styles.header = `background: ${this.options.style.color}`;
     }
 
+    (() => (new Image().src = chatUrl))();
+
     const vars = {
-      widgetUrl,
+      widgetUrl: chatUrl,
       asExpanded,
       styles
     };
+
     const widgetHtml = widgetTemplateLoader(vars);
 
     this.block.innerHTML = widgetHtml;
@@ -552,9 +679,18 @@ const onboarding = {
       }
     };
 
-    (function () {
-      new Image().src = widgetUrl;
-    })();
+    this.initSystemEventListeners();
+  },
+  /**
+   * Закрытие текущего и подгрузка нового чата
+   * @param {String} url
+   */
+  loadChatBot(url, expand = true) {
+    this.hideBlock();
+    setTimeout(() => {
+      this.destroyWidget();
+      this.renderWidget(url, expand);
+    }, 500);
   },
   /**
    * Возвращает путь к CSS
@@ -578,8 +714,12 @@ const onboarding = {
    */
   initSystemEventListeners() {
     const widget = document.querySelector('.getchat-widget');
-    const $menuBtn = document.querySelector('.getchat-widget__btn--action-menu');
-    const $closeBtn = document.querySelector('.getchat-widget__btn--action-close');
+    const $menuBtn = document.querySelector(
+      '.getchat-widget__btn--action-menu'
+    );
+    const $closeBtn = document.querySelector(
+      '.getchat-widget__btn--action-close'
+    );
     const $launcher = document.querySelector('.getchat-widget__launcher');
 
     $closeBtn.addEventListener('click', () => {
@@ -603,26 +743,44 @@ const onboarding = {
       Cookies.remove('gw_last_path');
     });
   },
+  /**
+   * Скрыть основной блок
+   */
   hideBlock() {
     this.block.classList.remove(this.expandClass);
     Cookies.set(this.expandCookieKey, false, {
       expires: 2147483647
     });
 
-    this.__intro.exit();
+    setTimeout(() => {
+      this.__intro.exit();
+    }, 500);
   },
+  /**
+   * Расскрыть основной блок
+   */
   expandBlock() {
     this.block.classList.add(this.expandClass);
     Cookies.set(this.expandCookieKey, true, {
       expires: 2147483647
     });
   },
+  startLoading() {
+    this._states.isLoading = true;
+  },
+  stopLoading() {
+    this._states.isLoading = false;
+  },
 
   showAvailableBots() {
-    let answers = this.ConditionEventsListeners.filterByPath(this.autoShowConditions, true).map(uuid => {
+    let answers = this.ConditionEventsListeners.filterByPath(
+      this.autoShowConditions,
+      true
+    ).map(uuid => {
       let minimum = 9000000000000000;
       let maximum = 9007199254740991;
-      let answer_id = Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
+      let answer_id =
+        Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
 
       const { bot_id, name, start } = this.autoShowConditions[uuid];
 

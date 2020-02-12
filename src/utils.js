@@ -18,9 +18,17 @@ export function loadCss(path) {
   link.href = path;
   head.appendChild(link);
 }
+
+export function isObject(obj) {
+  let type = typeof obj;
+
+  return type === 'function' || (type === 'object' && !!obj);
+}
+
 const utils = {
   showError,
-  loadCss
+  loadCss,
+  isObject
 };
 
 export default utils;

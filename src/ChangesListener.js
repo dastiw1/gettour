@@ -6,13 +6,29 @@
 import { showError } from './utils';
 
 export function __isNativeEvent(event) {
-  const defaultEvents = ['click', 'mouseover', 'mouseout', 'keyup', 'keypress', 'change', 'focus', 'submit'];
+  const defaultEvents = [
+    'click',
+    'mouseover',
+    'mouseout',
+    'keyup',
+    'keypress',
+    'change',
+    'focus',
+    'submit'
+  ];
 
   return defaultEvents.indexOf(event) > -1;
 }
 
 class ChangesListener {
-  constructor({ answer_id, listener_id, selector, event, attributeName, active_listener_id }) {
+  constructor({
+    answer_id,
+    listener_id,
+    selector,
+    event,
+    attributeName,
+    active_listener_id
+  }) {
     this.answer_id = answer_id;
     this.__tourObject = null;
     this.listener_id = listener_id;
@@ -52,7 +68,7 @@ class ChangesListener {
         this.callback = this.nativeEventListener.bind(this);
         target.addEventListener(event, this.callback, false);
       } else if (target == null) {
-        showError('Ошибка: Элемент отсутствует в DOM');
+        showError('Ошибка: Элемент отсутствует в DOM: ' + this.selector);
       }
 
       return;
@@ -173,7 +189,10 @@ class ChangesListener {
    * @param {Event} jsEvent
    */
   nativeEventListener(jsEvent) {
-    if (jsEvent.target.matches(this.selector) && this.isParentListenerActive()) {
+    if (
+      jsEvent.target.matches(this.selector) &&
+      this.isParentListenerActive()
+    ) {
       this.sendMessage();
 
       jsEvent.target.removeEventListener(this.event, this.callback, false);
@@ -186,7 +205,10 @@ class ChangesListener {
    * @param {Event} jsEvent
    */
   nativeClickListener(jsEvent) {
-    if (jsEvent.target.matches(this.selector) && this.isParentListenerActive()) {
+    if (
+      jsEvent.target.matches(this.selector) &&
+      this.isParentListenerActive()
+    ) {
       this.sendMessage();
 
       document.removeEventListener(this.event, this.callback);
@@ -251,7 +273,10 @@ class ChangesListener {
   }
 
   attributeChangeCallback(changeListener) {
-    if (this.type === 'attributes' && this.attributeName === changeListener.attributeName) {
+    if (
+      this.type === 'attributes' &&
+      this.attributeName === changeListener.attributeName
+    ) {
       changeListener.sendMessage();
       return changeListener.disconnectListener();
     }

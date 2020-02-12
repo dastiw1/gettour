@@ -9,7 +9,7 @@
         </div>
       </div>
     </div>
-    <iframe src="{{ widgetUrl }}" class="getchat-widget__frame"></iframe>
+    <iframe src="{{ widgetUrl }}" class="getchat-widget__frame" onload="gettour.stopLoading()"></iframe>
   </div>
   <div class="getchat-widget__launcher">
     <div class="getchat-widget__launcher-content">

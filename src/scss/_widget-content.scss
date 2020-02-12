@@ -13,6 +13,7 @@
   height: 0px;
   background-color: rgba(255, 255, 255, 0);
   z-index: 10000000;
+  transition: right 0.5s ease 0.2s, bottom 0.5s ease 0.2s;
 
   &.getchat-widget--preview {
     transform: scale(0.9) !important;
@@ -36,7 +37,7 @@
   }
 
   &__content {
-    display: none;
+    //display: none;
     position: absolute;
     margin: -58px 0px 0px -58px;
     padding: 0px;
@@ -45,20 +46,22 @@
     user-select: none;
     background-position: 0px 0px;
     background-size: 100% 100%;
-    left: 50%;
-    top: 50%;
-    width: 116px;
-    height: 116px;
     background-color: rgb(255, 255, 255);
     border-radius: 116px;
     z-index: 1;
-    box-shadow: 11px 8px 18px -8px rgba(0, 0, 0, 0.25), -11px 8px 18px -8px rgba(0, 0, 0, 0.25);
-    transition: transform 0.5s ease 0s, width 0.5s ease 0s, height 0.5s ease 0s, margin-left 0.5s ease 0s, margin-top 0.5s ease 0s, border-radius 0.5s ease 0s, opacity 0.5s ease 0s;
+    box-shadow: 11px 8px 18px -8px rgba(0, 0, 0, 0.25),
+      -11px 8px 18px -8px rgba(0, 0, 0, 0.25);
+    transition: transform 0.5s ease 0.2s, width 0.5s ease 0.2s,
+      height 0.5s ease 0.2s, margin 0.5s ease 0.2s, opacity 0.1s ease 0.1s,
+      border-radius 0s;
+    /* transition: all 0.5s ease 0.3s, border-radius 1ms, opacity 0.2s ease 0.1s,
+      box-shadow 1ms; */
   }
 
   /*
   * Positioning
   */
+  // Left-bottom
   &.getchat-widget--left-bottom {
     left: 60px;
     .getchat-widget__content {
@@ -69,6 +72,44 @@
     }
   }
 
+  // middle-center
+  &.getchat-widget--middle-center {
+    &.getchat-widget--expanded {
+      right: 50%;
+      bottom: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .getchat-widget__content {
+      margin: 0 0 0 0;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .getchat-widget__launcher {
+      margin: 0 0 0 0;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  /* Small devices (landscape phones, 768px and up) */
+  @media (min-width: 768px) {
+    &.getchat-widget--middle-center {
+      .getchat-widget__content {
+        width: 720px;
+        height: 460px;
+        overflow: hidden;
+        border-radius: 20px;
+      }
+      .getchat-widget__frame {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
   /**
   * Expanded
   */
@@ -86,6 +127,20 @@
     }
     .getchat-widget__launcher {
       display: none;
+    }
+  }
+
+  &--loading {
+    .getchat-widget__content {
+      display: none !important;
+    }
+  }
+
+  &:not(&--expanded) {
+    .getchat-widget__content {
+      width: 116px;
+      height: 116px;
+      //border-radius: 50%;
     }
   }
 
