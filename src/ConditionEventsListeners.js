@@ -1,6 +1,6 @@
 'use strict';
 import Cookies from 'js-cookie';
-
+import { detectClientLang } from './utils';
 let pathKey = 'gw_last_path';
 
 class ConditionEventsListeners {
@@ -29,10 +29,11 @@ class ConditionEventsListeners {
     if (first) {
       Cookies.remove(pathKey);
     }
+    let locale = detectClientLang();
 
     this.active = null;
     this.interval = setInterval(() => {
-      this.start();
+      this.start(locale);
     }, 1000);
 
     // TODO: make listener removable
@@ -41,7 +42,11 @@ class ConditionEventsListeners {
         once: true
       };
 
-      document.addEventListener('click', this.clickListener.bind(this), listenerOptions);
+      document.addEventListener(
+        'click',
+        this.clickListener.bind(this),
+        listenerOptions
+      );
       this.clickListenerLaunched = true;
     }
   }
@@ -77,14 +82,24 @@ class ConditionEventsListeners {
     return filtered;
   }
 
-  start() {
+  start(locale) {
     this.filterByPath(this.autoConditions, true).forEach(uuid => {
+      let localesMathed = true;
+
       let path = window.location.pathname;
       let prevPath = Cookies.get(pathKey);
 
       let cond = this.autoConditions[uuid];
 
-      if (prevPath !== path && this.matchDate(cond)) {
+      if ('user_locale' in cond) {
+        if (cond.user_locale.operator === '=') {
+          localesMathed = locale === cond.user_locale.value;
+        } else {
+          localesMathed = locale !== cond.user_locale.value;
+        }
+      }
+
+      if (prevPath !== path && localesMathed && this.matchDate(cond)) {
         if (this.active !== uuid) {
           window.getTourEventBus.dispatchEvent('ConditionMatched', {
             uuid
@@ -134,10 +149,12 @@ class ConditionEventsListeners {
     let condResults = [];
 
     condResults[0] =
-      cond.time_on_page == null || this.isMatchDateCondition(this.metrics.siteEnterTime, cond.time_on_page);
+      cond.time_on_page == null ||
+      this.isMatchDateCondition(this.metrics.siteEnterTime, cond.time_on_page);
 
     condResults[1] =
-      cond.time_on_site == null || this.isMatchDateCondition(this.metrics.pageEnterTime, cond.time_on_site);
+      cond.time_on_site == null ||
+      this.isMatchDateCondition(this.metrics.pageEnterTime, cond.time_on_site);
 
     return condResults.every(val => val === true);
   }
@@ -152,7 +169,10 @@ class ConditionEventsListeners {
     Object.keys(this.manualConditions).forEach(uuid => {
       const cond = this.manualConditions[uuid];
 
-      if (this.testForPathname(cond) && jsEvent.target.matches(cond.click_on_element.value)) {
+      if (
+        this.testForPathname(cond) &&
+        jsEvent.target.matches(cond.click_on_element.value)
+      ) {
         if (this.matchDate(cond)) {
           window.getTourEventBus.dispatchEvent('ConditionMatched', {
             uuid

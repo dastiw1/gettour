@@ -30,8 +30,8 @@
     background-size: 100% 100%;
     left: 0px;
     top: 0px;
-    width: 100px;
-    height: 100px;
+    width: 56px;
+    height: 56px;
     background-color: rgba(255, 255, 255, 0);
     z-index: 0;
   }
@@ -39,7 +39,7 @@
   &__content {
     //display: none;
     position: absolute;
-    margin: -58px 0px 0px -58px;
+    margin: 0 0 0 0;
     padding: 0px;
     opacity: 0;
     box-sizing: border-box;
@@ -138,8 +138,8 @@
 
   &:not(&--expanded) {
     .getchat-widget__content {
-      width: 116px;
-      height: 116px;
+      width: 56px;
+      height: 56px;
       //border-radius: 50%;
     }
   }

@@ -25,6 +25,22 @@ export function isObject(obj) {
   return type === 'function' || (type === 'object' && !!obj);
 }
 
+export function detectClientLang() {
+  let lang =
+    (navigator.languages && navigator.languages[0]) ||
+    navigator.language ||
+    navigator.userLanguage;
+
+  if (lang == null || typeof lang !== 'string') {
+    return 'en';
+  }
+
+  if (lang.length < 2) {
+    return 'en';
+  }
+
+  return lang.substr(0, 2);
+}
 const utils = {
   showError,
   loadCss,

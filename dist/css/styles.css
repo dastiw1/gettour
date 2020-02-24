@@ -106,13 +106,13 @@
     background-size: 100% 100%;
     left: 0px;
     top: 0px;
-    width: 100px;
-    height: 100px;
+    width: 56px;
+    height: 56px;
     background-color: rgba(255, 255, 255, 0);
     z-index: 0; }
   .getchat-widget__content {
     position: absolute;
-    margin: -58px 0px 0px -58px;
+    margin: 0 0 0 0;
     padding: 0px;
     opacity: 0;
     box-sizing: border-box;
@@ -171,8 +171,8 @@
   .getchat-widget--loading .getchat-widget__content {
     display: none !important; }
   .getchat-widget:not(.getchat-widget--expanded) .getchat-widget__content {
-    width: 116px;
-    height: 116px; }
+    width: 56px;
+    height: 56px; }
   .getchat-widget__frame {
     width: 320px;
     height: 0;

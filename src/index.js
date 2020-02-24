@@ -131,719 +131,721 @@ let statesChangesHandlers = {
 /**
  * Основной объект Gettour
  */
-const onboarding = {
-  rootClass: 'getchat-widget',
-  selector: '.getchat-widget__frame',
-  expandClass: 'getchat-widget--expanded',
-  loadingClass: 'getchat-widget--loading',
-  hasMsgClass: 'getchat-widget--has-msgs',
-  expandCookieKey: 'gw-state',
-  active: {
-    status: false,
-    listenerId: null,
-    condition: {
-      get() {
-        return this.ConditionEventsListeners.active;
+const onboarding = Object.assign(
+  {
+    rootClass: 'getchat-widget',
+    selector: '.getchat-widget__frame',
+    expandClass: 'getchat-widget--expanded',
+    loadingClass: 'getchat-widget--loading',
+    hasMsgClass: 'getchat-widget--has-msgs',
+    expandCookieKey: 'gw-state',
+    active: {
+      status: false,
+      listenerId: null,
+      condition: {
+        get() {
+          return this.ConditionEventsListeners.active;
+        },
+        set(val) {
+          this.ConditionEventsListeners.active = val;
+        }
+      }
+    },
+    _states: new Proxy(
+      {
+        isLoading: false // Boolean
       },
-      set(val) {
-        this.ConditionEventsListeners.active = val;
-      }
-    }
-  },
-  _states: new Proxy(
-    {
-      isLoading: false // Boolean
-    },
-    statesChangesHandlers
-  ),
-  __intro: null,
-  widgetHash: null, // String
-  autoShowConditions: {},
-  hash: null,
-  domain: null,
-  block: null,
-  setOptions,
-  stylesLoaded: false,
-  triggeredCount: 0,
-  __observers: {},
-  listenersList: new Map(),
+      statesChangesHandlers
+    ),
+    __intro: null,
+    widgetHash: null, // String
+    autoShowConditions: {},
+    hash: null,
+    domain: null,
+    block: null,
+    setOptions,
+    stylesLoaded: false,
+    triggeredCount: 0,
+    __observers: {},
+    listenersList: new Map(),
 
-  options: new Proxy(
-    {
-      env: 'production',
-      preview: false,
-      devHost: 'http://localhost',
-      alignment: 'left-bottom'
-    },
-    optionsChangesHandler
-  ),
-  ConditionEventsListeners: null,
+    options: new Proxy(
+      {
+        env: 'production',
+        preview: false,
+        devHost: 'http://localhost',
+        alignment: 'left-bottom'
+      },
+      optionsChangesHandler
+    ),
+    ConditionEventsListeners: null,
 
-  /* ================================
-          Inject functionals here
-   =====================================*/
-  ...widgetStyles,
-  /**
-   * =============================
-   * METHODS
-   * ===============================
-   */
-  /**
-   *
-   * @param {string} hash
-   * @param {object} options
-   */
-  init(hash, options = {}) {
-    const self = this;
+    /**
+     * =============================
+     * METHODS
+     * ===============================
+     */
+    /**
+     *
+     * @param {string} hash
+     * @param {object} options
+     */
+    init(hash, options = {}) {
+      const self = this;
 
-    this.hash = hash;
-    // this.options = Object.assign(this.options, options);
-    Object.keys(options).forEach(key => {
-      this.options[key] = options[key];
-    });
+      this.hash = hash;
+      // this.options = Object.assign(this.options, options);
+      Object.keys(options).forEach(key => {
+        this.options[key] = options[key];
+      });
 
-    this.loadWidgetData().then(data => {
-      this.domain = data.domain;
-      this.active.status = data.widget_active;
-      this.autoShowConditions = data.conditions;
+      this.loadWidgetData().then(data => {
+        this.domain = data.domain;
+        this.active.status = data.widget_active;
+        this.autoShowConditions = data.conditions;
 
-      // this.options = Object.assign(this.options, data.widget_options);
-      if (isObject(data.widget_options)) {
-        Object.keys(data.widget_options).forEach(key => {
-          this.options[key] = data.widget_options[key];
+        // this.options = Object.assign(this.options, data.widget_options);
+        if (isObject(data.widget_options)) {
+          Object.keys(data.widget_options).forEach(key => {
+            this.options[key] = data.widget_options[key];
+          });
+        }
+
+        if (!this.active.status) {
+          return;
+        }
+        this.__intro = introJs();
+
+        this.ConditionEventsListeners = new ConditionEventsListeners(
+          this.autoShowConditions
+        );
+
+        this.ConditionEventsListeners.watchForMatch(true);
+
+        this.__intro.onchange(() => {
+          self.__intro.refresh();
+          return this;
         });
-      }
+        this.__intro.onbeforechange(() => {
+          if (this.__intro._introItems.length) {
+            const step = this.__intro._introItems[0];
 
-      if (!this.active.status) {
-        return;
-      }
-      this.__intro = introJs();
-
-      this.ConditionEventsListeners = new ConditionEventsListeners(
-        this.autoShowConditions
-      );
-
-      this.ConditionEventsListeners.watchForMatch(true);
-
-      this.__intro.onchange(() => {
-        self.__intro.refresh();
-        return this;
-      });
-      this.__intro.onbeforechange(() => {
-        if (this.__intro._introItems.length) {
-          const step = this.__intro._introItems[0];
-
-          self.setOptions(step);
-        }
-
-        //
-        const closeBtn = document.querySelector(
-          '.getchat-widget > .getchat-widget__btn--icon'
-        );
-
-        if (closeBtn) {
-          closeBtn.style.display = 'none';
-        }
-      });
-
-      this.__intro.onexit(() => {
-        const closeBtn = document.querySelector(
-          '.getchat-widget > .getchat-widget__btn--icon'
-        );
-
-        if (closeBtn) {
-          closeBtn.style.display = 'inline-flex';
-        }
-      });
-
-      // Слушать события выделения
-      window.addEventListener('message', event => {
-        this.__listenForHighlightRequests.call(this, event);
-      });
-
-      // Слушать события кнопок чата
-      window.addEventListener('message', event => {
-        this.__listenForActionClickedRequests.call(this, event);
-      });
-
-      // Слушать события для Observer-а
-      window.addEventListener('message', event => {
-        this.__listenForObserveRequests.call(this, event);
-      });
-
-      // Слушать события для EVALUATE для выполнения userScript
-      window.addEventListener('message', event => {
-        this.__listenForUserScriptEvaluateRequests.call(this, event);
-      });
-
-      // Слушать события наличия новых сообщении
-      window.addEventListener('message', event => {
-        this.__listenForNewMessages.call(this, event);
-      });
-
-      // Слушать события наличия новых сообщении
-      window.addEventListener('message', event => {
-        this.__listenForBotInfo.call(this, event);
-      });
-
-      // bla
-      window.getTourEventBus.addEventListener('ConditionMatched', e => {
-        if (
-          e != null &&
-          this.autoShowConditions[e.detail.uuid].onClick &&
-          this.active.condition === e.detail.uuid &&
-          this.active.condition
-        ) {
-          // Если нажали на элемент вызывающий данный виджет, но виджет уже подгружен
-          if (this.block.classList.contains(this.expandClass)) {
-            this.hideBlock();
-          } else {
-            this.expandBlock();
+            self.setOptions(step);
           }
-        } else {
-          this.loadCondition(e.detail.uuid);
+
+          //
+          const closeBtn = document.querySelector(
+            '.getchat-widget > .getchat-widget__btn--icon'
+          );
+
+          if (closeBtn) {
+            closeBtn.style.display = 'none';
+          }
+        });
+
+        this.__intro.onexit(() => {
+          const closeBtn = document.querySelector(
+            '.getchat-widget > .getchat-widget__btn--icon'
+          );
+
+          if (closeBtn) {
+            closeBtn.style.display = 'inline-flex';
+          }
+        });
+
+        // Слушать события выделения
+        window.addEventListener('message', event => {
+          this.__listenForHighlightRequests.call(this, event);
+        });
+
+        // Слушать события кнопок чата
+        window.addEventListener('message', event => {
+          this.__listenForActionClickedRequests.call(this, event);
+        });
+
+        // Слушать события для Observer-а
+        window.addEventListener('message', event => {
+          this.__listenForObserveRequests.call(this, event);
+        });
+
+        // Слушать события для EVALUATE для выполнения userScript
+        window.addEventListener('message', event => {
+          this.__listenForUserScriptEvaluateRequests.call(this, event);
+        });
+
+        // Слушать события наличия новых сообщении
+        window.addEventListener('message', event => {
+          this.__listenForNewMessages.call(this, event);
+        });
+
+        // Слушать события наличия новых сообщении
+        window.addEventListener('message', event => {
+          this.__listenForBotInfo.call(this, event);
+        });
+
+        // bla
+        window.getTourEventBus.addEventListener('ConditionMatched', e => {
+          if (
+            e != null &&
+            this.autoShowConditions[e.detail.uuid].onClick &&
+            this.active.condition === e.detail.uuid &&
+            this.active.condition
+          ) {
+            // Если нажали на элемент вызывающий данный виджет, но виджет уже подгружен
+            if (this.block.classList.contains(this.expandClass)) {
+              this.hideBlock();
+            } else {
+              this.expandBlock();
+            }
+          } else {
+            this.loadCondition(e.detail.uuid);
+          }
+        });
+
+        // Если не подходит под условия
+        window.getTourEventBus.addEventListener('NoMatchedConditions', e => {
+          this.reset();
+        });
+
+        // Слущать изменение URL
+        this.listenForLocationChange();
+      });
+
+      return this;
+    },
+    /**
+     * Подгрузка виджета если попадает под одну из условии
+     */
+
+    loadCondition(uuid) {
+      if (event != null) {
+        this.active.condition = uuid;
+      } else {
+        this.active.condition = null;
+      }
+
+      if (this.active.condition) {
+        let oldVal = Cookies.get(this.expandCookieKey);
+        let asExpanded = oldVal === 'true';
+
+        if (this.autoShowConditions[this.active.condition] == null) {
+          console.error('Attempt to load incorrect action uuid: ' + uuid);
+          return;
         }
-      });
+        this.renderWidget(
+          this.autoShowConditions[this.active.condition].link,
+          asExpanded
+        );
 
-      // Если не подходит под условия
-      window.getTourEventBus.addEventListener('NoMatchedConditions', e => {
-        this.reset();
-      });
+        if (!this.stylesLoaded) {
+          this.loadStyles();
+        }
 
-      // Слущать изменение URL
-      this.listenForLocationChange();
-    });
+        if (
+          this.triggeredCount === 0 &&
+          this.options.launchAsExpanded &&
+          asExpanded
+        ) {
+          this.expandBlock();
+        }
 
-    return this;
-  },
-  /**
-   * Подгрузка виджета если попадает под одну из условии
-   */
-
-  loadCondition(uuid) {
-    if (event != null) {
-      this.active.condition = uuid;
-    } else {
-      this.active.condition = null;
-    }
-
-    if (this.active.condition) {
-      let oldVal = Cookies.get(this.expandCookieKey);
-      let asExpanded = oldVal === 'true';
-
-      if (this.autoShowConditions[this.active.condition] == null) {
-        console.error('Attempt to load incorrect action uuid: ' + uuid);
-        return;
+        this.triggeredCount += 1;
       }
-      this.renderWidget(
-        this.autoShowConditions[this.active.condition].link,
-        asExpanded
-      );
-
-      if (!this.stylesLoaded) {
-        this.loadStyles();
-      }
-
-      if (
-        this.triggeredCount === 0 &&
-        this.options.launchAsExpanded &&
-        asExpanded
-      ) {
-        this.expandBlock();
-      }
-
-      this.triggeredCount += 1;
-    }
-  },
-  listenForLocationChange() {
-    /* This modifies these three functions so that all fire
+    },
+    listenForLocationChange() {
+      /* This modifies these three functions so that all fire
     a custom locationchange event for you to use,
     and also pushstate and replacestate events if you want to use those:
     From: https://stackoverflow.com/a/52809105/3939853 */
 
-    const evt = 'locationchange';
+      const evt = 'locationchange';
 
-    history.pushState = (f =>
-      function pushState() {
-        const ret = f.apply(this, arguments);
+      history.pushState = (f =>
+        function pushState() {
+          const ret = f.apply(this, arguments);
 
-        window.dispatchEvent(new Event('pushState'));
+          window.dispatchEvent(new Event('pushState'));
+          window.dispatchEvent(new Event(evt));
+          return ret;
+        })(history.pushState);
+
+      history.replaceState = (f =>
+        function replaceState() {
+          const ret = f.apply(this, arguments);
+
+          window.dispatchEvent(new Event('replaceState'));
+          window.dispatchEvent(new Event(evt));
+          return ret;
+        })(history.replaceState);
+
+      window.addEventListener('popstate', () => {
         window.dispatchEvent(new Event(evt));
-        return ret;
-      })(history.pushState);
+      });
 
-    history.replaceState = (f =>
-      function replaceState() {
-        const ret = f.apply(this, arguments);
+      /**
+       * Слушать изменение URL. watchForMatch запускает по условию loadCondition
+       */
+      window.addEventListener('locationchange', () => {
+        clearInterval(this.ConditionEventsListeners.interval);
+        this.reset();
 
-        window.dispatchEvent(new Event('replaceState'));
-        window.dispatchEvent(new Event(evt));
-        return ret;
-      })(history.replaceState);
-
-    window.addEventListener('popstate', () => {
-      window.dispatchEvent(new Event(evt));
-    });
-
+        if (Object.keys(this.autoShowConditions).length) {
+          this.ConditionEventsListeners.watchForMatch();
+        }
+      });
+    },
     /**
-     * Слушать изменение URL. watchForMatch запускает по условию loadCondition
+     * Если приходят такие экшны, то убирать highlight
+     * @param {object} e
      */
-    window.addEventListener('locationchange', () => {
-      clearInterval(this.ConditionEventsListeners.interval);
-      this.reset();
-
-      if (Object.keys(this.autoShowConditions).length) {
-        this.ConditionEventsListeners.watchForMatch();
-      }
-    });
-  },
-  /**
-   * Если приходят такие экшны, то убирать highlight
-   * @param {object} e
-   */
-  __listenForActionClickedRequests(e) {
-    if (
-      isMessageFromWidget.call(this, e) &&
-      e.data.action === 'ACTION_CLICKED'
-    ) {
-      const { answer_id } = e.data;
-      let { steps } = this.__intro._options;
-
+    __listenForActionClickedRequests(e) {
       if (
-        steps &&
-        steps.length &&
-        steps.find(s => answer_id === s.highlightEventAnswerId)
+        isMessageFromWidget.call(this, e) &&
+        e.data.action === 'ACTION_CLICKED'
       ) {
-        this.__intro.exit();
-        this.__intro.clearSteps();
-      }
-    }
-  },
-  /**
-   * Запустить прослушнивание событии которые выстреливают listener_id
-   * @param {Object} e
-   */
-  __listenForObserveRequests(e) {
-    let { data } = e;
+        const { answer_id } = e.data;
+        let { steps } = this.__intro._options;
 
-    if (isMessageFromWidget.call(this, e) && data.action === 'OBSERVE') {
-      // let activeListener = this.active.listenerId;
-      let id = data.answer_id;
-
-      this.__setActiveListener(data.active_listener_id || null);
-
-      if (!this.listenersList.has(id)) {
-        let listener = new ChangesListener(data);
-
-        listener.tourJs = this;
-        listener.init();
-        this.__registerListener(listener);
-      }
-    }
-  },
-  /**
-   * Запустить прослушнивание событии userScript
-   * @param {Object} e
-   */
-  __listenForUserScriptEvaluateRequests(e) {
-    let { data } = e;
-
-    if (isMessageFromWidget.call(this, e) && data.action === 'EVALUATE') {
-      // eslint-disable-next-line no-eval
-      eval(data.script);
-    }
-  },
-  /**
-   * Добавляет экземпляр ChangesListener в список
-   * @param {ChangesListener} listener
-   */
-  __registerListener(listener) {
-    let id = listener.answer_id;
-
-    if (!this.listenersList.has(id)) {
-      this.listenersList.set(id, listener);
-    }
-  },
-
-  /**
-   * Если приходят такие экшны, то на основе значения value
-   * говорим виджету мигать или нет.
-   * @param {object} e
-   */
-  __listenForNewMessages(e) {
-    if (isMessageFromWidget.call(this, e) && e.data.action === 'NEW_MESSAGE') {
-      const { value } = e.data;
-      let widget = document.querySelector('.getchat-widget');
-
-      if (value) {
         if (
-          !widget.classList.contains(this.hasMsgClass) &&
-          !widget.classList.contains(this.expandClass)
+          steps &&
+          steps.length &&
+          steps.find(s => answer_id === s.highlightEventAnswerId)
         ) {
-          widget.classList.add(this.hasMsgClass);
-        }
-      } else {
-        widget.classList.remove(this.hasMsgClass);
-      }
-    }
-  },
-  /**
-   * Получаем объект с данными бота
-   * @param {object} e - Event
-   */
-  __listenForBotInfo(e) {
-    if (isMessageFromWidget.call(this, e) && e.data.action === 'BOT_DATA') {
-      let widgetAvaImg = document.querySelector(
-        '.getchat-widget .getchat-widget__header-ava > img'
-      );
-
-      if (widgetAvaImg && e.data.bot.style.avatar) {
-        widgetAvaImg.setAttribute('src', e.data.bot.style.avatar);
-      }
-    }
-  },
-  /**
-   * Запустить прослушивание закрытия выделения элемента
-   * @param {Object} e
-   */
-  __listenForHighlightRequests(e) {
-    if (isMessageFromWidget.call(this, e) && e.data.action === 'HIGHLIGHT') {
-      if (e.data.selector) {
-        this.highlight(e.data);
-      }
-    }
-  },
-  /**
-   *
-   * @param {*} selector
-   */
-  __getElementForHighlight(selector) {
-    const elements = document.querySelectorAll(selector);
-    const elementsArray = Array.from(elements);
-
-    const el = elementsArray.find(isAnyPartOfElementInViewport);
-
-    if (!isElementHidden(el)) {
-      return el;
-    }
-    return null;
-  },
-  highlight({ selector, closeEvent, highlightEventAnswerId }) {
-    let waitTime = 0.05;
-    const step = {
-      element: selector,
-      fixed: true,
-      closeEvent,
-      highlightEventAnswerId
-    };
-    const introElement = this.__getElementForHighlight(selector);
-
-    if (introElement == null) {
-      showError("Element doesn't exist on DOM");
-      return;
-    }
-
-    const isInVP = isInViewport(introElement);
-
-    if (!isInVP) {
-      introElement.scrollIntoView({
-        behavior: 'smooth',
-        inline: 'center'
-      });
-      waitTime = 1.5;
-    }
-    if (closeEvent === 'chatListenerClick') {
-      this.setOptions({
-        options: {
-          exitOnEsc: false,
-          exitOnOverlayClick: false,
-          disableInteraction: true
-        }
-      });
-    } else {
-      this.setOptions({
-        options: {
-          exitOnEsc: true,
-          exitOnOverlayClick: false,
-          disableInteraction: false
-        }
-      });
-    }
-    this.__intro.addStep(step);
-
-    // Listen to event
-    if (closeEvent !== 'chatListenerClick') {
-      introElement.addEventListener(
-        closeEvent,
-        () => {
           this.__intro.exit();
           this.__intro.clearSteps();
-        },
-        {
-          once: true
         }
-      );
-    }
-
-    // Close
-    if (this.__intro._introItems.length) {
-      this.__intro.goToStepNumber(0);
-    }
-    this.__intro.exit();
-
-    setTimeout(() => {
-      this.__intro.start(step);
-    }, waitTime * 1000);
-  },
-  sendMessage(msg, msgType = 'trigger', exit = true) {
-    if (exit) {
-      this.__intro.exit();
-    }
-
-    const frame = document.querySelector(this.selector);
-
-    if (!frame) {
-      showError("Widget's iframe not found!");
-      return;
-    }
-
-    frame.contentWindow.postMessage(
-      Object.assign(msg, {
-        source: 'get-tour-library',
-        msgType
-      }),
-      '*'
-    );
-  },
-  reset() {
-    this.__intro._options.steps = [];
-    this.__intro.refresh();
-    this.destroyWidget();
-    // this.triggeredCount = 0;
-  },
-  destroyWidget() {
-    if (this.block) {
-      this.block.remove();
-    }
-  },
-  /**
-   *
-   * @param {string} chatUrl
-   * @param {boolean} asExpanded
-   * @returns {void}
-   */
-  renderWidget(chatUrl, asExpanded) {
-    let widgetClass = 'getchat-widget';
-    let styles = {};
-
-    this.startLoading();
-
-    this.block = document.createElement('div');
-
-    this.block.className = widgetClass;
-
-    // Указать выравнивание
-    if (this.options.alignment) {
-      this.block.className += ` ${widgetClass}--${this.options.alignment}`;
-    }
-
-    // Указать в режиме preview или нет
-    if (this.options.preview) {
-      this.block.className += `${widgetClass}--preview`;
-    }
-
-    // Задать background шапки
-    if (this.options.style.color) {
-      styles.header = `background: ${this.options.style.color}`;
-    }
-
-    (() => (new Image().src = chatUrl))();
-
-    const vars = {
-      widgetUrl: chatUrl,
-      asExpanded,
-      styles
-    };
-
-    const widgetHtml = widgetTemplateLoader(vars);
-
-    this.block.innerHTML = widgetHtml;
-
-    document.body.appendChild(this.block);
-
-    let frame = document.querySelector('.getchat-widget__frame');
-
-    frame.onload = () => {
-      if (asExpanded) {
-        this.expandBlock();
       }
-    };
+    },
+    /**
+     * Запустить прослушнивание событии которые выстреливают listener_id
+     * @param {Object} e
+     */
+    __listenForObserveRequests(e) {
+      let { data } = e;
 
-    this.initSystemEventListeners();
-  },
-  /**
-   * Закрытие текущего и подгрузка нового чата
-   * @param {String} url
-   */
-  loadChatBot(url, expand = true) {
-    this.hideBlock();
-    setTimeout(() => {
-      this.destroyWidget();
-      this.renderWidget(url, expand);
-    }, 500);
-  },
-  /**
-   * Возвращает путь к CSS
-   */
-  stylesFilePath() {
-    return STYLEPATH[this.options.env];
-  },
-  loadStyles() {
-    loadCss(this.stylesFilePath());
-    this.stylesLoaded = true;
-  },
-  /**
-   * Задает активный listener_id в чате.
-   * Эта инфомрация нужна чтобы не срабатывали события из прошлых листенеров
-   */
-  __setActiveListener(listenerId) {
-    this.active.listenerId = listenerId;
-  },
-  /**
-   * Подписывается на системные события виджета такие как открыти/закрытие по нажатию на иконку
-   */
-  initSystemEventListeners() {
-    const widget = document.querySelector('.getchat-widget');
-    const $menuBtn = document.querySelector(
-      '.getchat-widget__btn--action-menu'
-    );
-    const $closeBtn = document.querySelector(
-      '.getchat-widget__btn--action-close'
-    );
-    const $launcher = document.querySelector('.getchat-widget__launcher');
+      if (isMessageFromWidget.call(this, e) && data.action === 'OBSERVE') {
+        // let activeListener = this.active.listenerId;
+        let id = data.answer_id;
 
-    $closeBtn.addEventListener('click', () => {
-      if (widget.classList.contains(this.expandClass)) {
-        this.hideBlock();
+        this.__setActiveListener(data.active_listener_id || null);
+
+        if (!this.listenersList.has(id)) {
+          let listener = new ChangesListener(data);
+
+          listener.tourJs = this;
+          listener.init();
+          this.__registerListener(listener);
+        }
       }
-    });
+    },
+    /**
+     * Запустить прослушнивание событии userScript
+     * @param {Object} e
+     */
+    __listenForUserScriptEvaluateRequests(e) {
+      let { data } = e;
 
-    $menuBtn.addEventListener('click', () => {
-      this.showAvailableBots();
-    });
-
-    $launcher.addEventListener('click', () => {
-      if (!widget.classList.contains(this.expandClass)) {
-        this.expandBlock();
+      if (isMessageFromWidget.call(this, e) && data.action === 'EVALUATE') {
+        // eslint-disable-next-line no-eval
+        eval(data.script);
       }
-    });
+    },
+    /**
+     * Добавляет экземпляр ChangesListener в список
+     * @param {ChangesListener} listener
+     */
+    __registerListener(listener) {
+      let id = listener.answer_id;
 
-    window.addEventListener('beforeunload', () => {
-      clearInterval(this.ConditionEventsListeners.interval);
-      Cookies.remove('gw_last_path');
-    });
-  },
-  /**
-   * Скрыть основной блок
-   */
-  hideBlock() {
-    this.block.classList.remove(this.expandClass);
-    Cookies.set(this.expandCookieKey, false, {
-      expires: 2147483647
-    });
+      if (!this.listenersList.has(id)) {
+        this.listenersList.set(id, listener);
+      }
+    },
 
-    setTimeout(() => {
-      this.__intro.exit();
-    }, 500);
-  },
-  /**
-   * Расскрыть основной блок
-   */
-  expandBlock() {
-    this.block.classList.add(this.expandClass);
-    Cookies.set(this.expandCookieKey, true, {
-      expires: 2147483647
-    });
-  },
-  startLoading() {
-    this._states.isLoading = true;
-  },
-  stopLoading() {
-    this._states.isLoading = false;
-  },
+    /**
+     * Если приходят такие экшны, то на основе значения value
+     * говорим виджету мигать или нет.
+     * @param {object} e
+     */
+    __listenForNewMessages(e) {
+      if (
+        isMessageFromWidget.call(this, e) &&
+        e.data.action === 'NEW_MESSAGE'
+      ) {
+        const { value } = e.data;
+        let widget = document.querySelector('.getchat-widget');
 
-  showAvailableBots() {
-    let answers = this.ConditionEventsListeners.filterByPath(
-      this.autoShowConditions,
-      true
-    ).map(uuid => {
-      let minimum = 9000000000000000;
-      let maximum = 9007199254740991;
-      let answer_id =
-        Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
-
-      const { bot_id, name, start } = this.autoShowConditions[uuid];
-
-      return {
-        answer: {
-          answer_id,
-          bot_id,
-          listener_id: start,
-          text: name,
-          type: 'botLoader'
-        },
-        type: 'actionAnswer'
-      };
-    });
-
-    this.sendMessage(
-      {
-        answers
-      },
-      'botSelector',
-      false
-    );
-  },
-  loadWidgetData() {
-    if (!this.hash) {
-      const err = '[Ошибка] hash отсутствует';
-
-      throw err;
-    }
-    let host = 'https://getchat.me';
-    let url = `${host}/api/the-bot/widget/${this.hash}/data`;
-
-    if (this.options.env === 'development') {
-      url = url.replace(host, this.options.devHost);
-    }
-
-    return new Promise((resolve, reject) => {
-      const init = {
-        method: 'GET',
-        credentials: 'omit',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        mode: 'cors',
-        cache: 'no-cache',
-        dataType: 'jsonp'
-      };
-
-      return fetch(url, init)
-        .then(res => {
-          if (res.status === 200) {
-            return res.json();
+        if (value) {
+          if (
+            !widget.classList.contains(this.hasMsgClass) &&
+            !widget.classList.contains(this.expandClass)
+          ) {
+            widget.classList.add(this.hasMsgClass);
           }
-          showError(`[Ошибка] ${res.statusText}`);
-          return {};
-        })
-        .then(response => resolve(response))
-        .catch(error => {
-          showError(error);
-          reject(error);
+        } else {
+          widget.classList.remove(this.hasMsgClass);
+        }
+      }
+    },
+    /**
+     * Получаем объект с данными бота
+     * @param {object} e - Event
+     */
+    __listenForBotInfo(e) {
+      if (isMessageFromWidget.call(this, e) && e.data.action === 'BOT_DATA') {
+        let widgetAvaImg = document.querySelector(
+          '.getchat-widget .getchat-widget__header-ava > img'
+        );
+
+        if (widgetAvaImg && e.data.bot.style.avatar) {
+          widgetAvaImg.setAttribute('src', e.data.bot.style.avatar);
+        }
+      }
+    },
+    /**
+     * Запустить прослушивание закрытия выделения элемента
+     * @param {Object} e
+     */
+    __listenForHighlightRequests(e) {
+      if (isMessageFromWidget.call(this, e) && e.data.action === 'HIGHLIGHT') {
+        if (e.data.selector) {
+          this.highlight(e.data);
+        }
+      }
+    },
+    /**
+     *
+     * @param {*} selector
+     */
+    __getElementForHighlight(selector) {
+      const elements = document.querySelectorAll(selector);
+      const elementsArray = Array.from(elements);
+
+      const el = elementsArray.find(isAnyPartOfElementInViewport);
+
+      if (!isElementHidden(el)) {
+        return el;
+      }
+      return null;
+    },
+    highlight({ selector, closeEvent, highlightEventAnswerId }) {
+      let waitTime = 0.05;
+      const step = {
+        element: selector,
+        fixed: true,
+        closeEvent,
+        highlightEventAnswerId
+      };
+      const introElement = this.__getElementForHighlight(selector);
+
+      if (introElement == null) {
+        showError("Element doesn't exist on DOM");
+        return;
+      }
+
+      const isInVP = isInViewport(introElement);
+
+      if (!isInVP) {
+        introElement.scrollIntoView({
+          behavior: 'smooth',
+          inline: 'center'
         });
-    });
-  }
-};
+        waitTime = 1.5;
+      }
+      if (closeEvent === 'chatListenerClick') {
+        this.setOptions({
+          options: {
+            exitOnEsc: false,
+            exitOnOverlayClick: false,
+            disableInteraction: true
+          }
+        });
+      } else {
+        this.setOptions({
+          options: {
+            exitOnEsc: true,
+            exitOnOverlayClick: false,
+            disableInteraction: false
+          }
+        });
+      }
+      this.__intro.addStep(step);
+
+      // Listen to event
+      if (closeEvent !== 'chatListenerClick') {
+        introElement.addEventListener(
+          closeEvent,
+          () => {
+            this.__intro.exit();
+            this.__intro.clearSteps();
+          },
+          {
+            once: true
+          }
+        );
+      }
+
+      // Close
+      if (this.__intro._introItems.length) {
+        this.__intro.goToStepNumber(0);
+      }
+      this.__intro.exit();
+
+      setTimeout(() => {
+        this.__intro.start(step);
+      }, waitTime * 1000);
+    },
+    sendMessage(msg, msgType = 'trigger', exit = true) {
+      if (exit) {
+        this.__intro.exit();
+      }
+
+      const frame = document.querySelector(this.selector);
+
+      if (!frame) {
+        showError("Widget's iframe not found!");
+        return;
+      }
+
+      frame.contentWindow.postMessage(
+        Object.assign(msg, {
+          source: 'get-tour-library',
+          msgType
+        }),
+        '*'
+      );
+    },
+    reset() {
+      this.__intro._options.steps = [];
+      this.__intro.refresh();
+      this.destroyWidget();
+      // this.triggeredCount = 0;
+    },
+    destroyWidget() {
+      if (this.block) {
+        this.block.remove();
+      }
+    },
+    /**
+     *
+     * @param {string} chatUrl
+     * @param {boolean} asExpanded
+     * @returns {void}
+     */
+    renderWidget(chatUrl, asExpanded) {
+      let widgetClass = 'getchat-widget';
+      let styles = {};
+
+      this.startLoading();
+
+      this.block = document.createElement('div');
+
+      this.block.className = widgetClass;
+
+      // Указать выравнивание
+      if (this.options.alignment) {
+        this.block.className += ` ${widgetClass}--${this.options.alignment}`;
+      }
+
+      // Указать в режиме preview или нет
+      if (this.options.preview) {
+        this.block.className += `${widgetClass}--preview`;
+      }
+
+      // Задать background шапки
+      if (this.options.style.color) {
+        styles.header = `background: ${this.options.style.color}`;
+      }
+
+      (() => (new Image().src = chatUrl))();
+
+      const vars = {
+        widgetUrl: chatUrl,
+        asExpanded,
+        styles
+      };
+
+      const widgetHtml = widgetTemplateLoader(vars);
+
+      this.block.innerHTML = widgetHtml;
+
+      document.body.appendChild(this.block);
+
+      let frame = document.querySelector('.getchat-widget__frame');
+
+      frame.onload = () => {
+        if (asExpanded) {
+          this.expandBlock();
+        }
+      };
+
+      this.initSystemEventListeners();
+    },
+    /**
+     * Закрытие текущего и подгрузка нового чата
+     * @param {String} url
+     */
+    loadChatBot(url, expand = true) {
+      this.hideBlock();
+      setTimeout(() => {
+        this.destroyWidget();
+        this.renderWidget(url, expand);
+      }, 500);
+    },
+    /**
+     * Возвращает путь к CSS
+     */
+    stylesFilePath() {
+      return STYLEPATH[this.options.env];
+    },
+    loadStyles() {
+      loadCss(this.stylesFilePath());
+      this.stylesLoaded = true;
+    },
+    /**
+     * Задает активный listener_id в чате.
+     * Эта инфомрация нужна чтобы не срабатывали события из прошлых листенеров
+     */
+    __setActiveListener(listenerId) {
+      this.active.listenerId = listenerId;
+    },
+    /**
+     * Подписывается на системные события виджета такие как открыти/закрытие по нажатию на иконку
+     */
+    initSystemEventListeners() {
+      const widget = document.querySelector('.getchat-widget');
+      const $menuBtn = document.querySelector(
+        '.getchat-widget__btn--action-menu'
+      );
+      const $closeBtn = document.querySelector(
+        '.getchat-widget__btn--action-close'
+      );
+      const $launcher = document.querySelector('.getchat-widget__launcher');
+
+      $closeBtn.addEventListener('click', () => {
+        if (widget.classList.contains(this.expandClass)) {
+          this.hideBlock();
+        }
+      });
+
+      $menuBtn.addEventListener('click', () => {
+        this.showAvailableBots();
+      });
+
+      $launcher.addEventListener('click', () => {
+        if (!widget.classList.contains(this.expandClass)) {
+          this.expandBlock();
+        }
+      });
+
+      window.addEventListener('beforeunload', () => {
+        clearInterval(this.ConditionEventsListeners.interval);
+        Cookies.remove('gw_last_path');
+      });
+    },
+    /**
+     * Скрыть основной блок
+     */
+    hideBlock() {
+      this.block.classList.remove(this.expandClass);
+      Cookies.set(this.expandCookieKey, false, {
+        expires: 2147483647
+      });
+
+      setTimeout(() => {
+        this.__intro.exit();
+      }, 500);
+    },
+    /**
+     * Расскрыть основной блок
+     */
+    expandBlock() {
+      this.block.classList.add(this.expandClass);
+      Cookies.set(this.expandCookieKey, true, {
+        expires: 2147483647
+      });
+    },
+    startLoading() {
+      this._states.isLoading = true;
+    },
+    stopLoading() {
+      this._states.isLoading = false;
+    },
+
+    showAvailableBots() {
+      let answers = this.ConditionEventsListeners.filterByPath(
+        this.autoShowConditions,
+        true
+      ).map(uuid => {
+        let minimum = 9000000000000000;
+        let maximum = 9007199254740991;
+        let answer_id =
+          Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
+
+        const { bot_id, name, start } = this.autoShowConditions[uuid];
+
+        return {
+          answer: {
+            answer_id,
+            bot_id,
+            listener_id: start,
+            text: name,
+            type: 'botLoader'
+          },
+          type: 'actionAnswer'
+        };
+      });
+
+      this.sendMessage(
+        {
+          answers
+        },
+        'botSelector',
+        false
+      );
+    },
+    loadWidgetData() {
+      if (!this.hash) {
+        const err = '[Ошибка] hash отсутствует';
+
+        throw err;
+      }
+      let host = 'https://getchat.me';
+      let url = `${host}/api/the-bot/widget/${this.hash}/data`;
+
+      if (this.options.env === 'development') {
+        url = url.replace(host, this.options.devHost);
+      }
+
+      return new Promise((resolve, reject) => {
+        const init = {
+          method: 'GET',
+          credentials: 'omit',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          mode: 'cors',
+          cache: 'no-cache',
+          dataType: 'jsonp'
+        };
+
+        return fetch(url, init)
+          .then(res => {
+            if (res.status === 200) {
+              return res.json();
+            }
+            showError(`[Ошибка] ${res.statusText}`);
+            return {};
+          })
+          .then(response => resolve(response))
+          .catch(error => {
+            showError(error);
+            reject(error);
+          });
+      });
+    }
+  },
+  widgetStyles
+);
 
 export default onboarding;
