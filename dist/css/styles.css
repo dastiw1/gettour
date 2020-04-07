@@ -123,7 +123,7 @@
     border-radius: 116px;
     z-index: 1;
     box-shadow: 11px 8px 18px -8px rgba(0, 0, 0, 0.25), -11px 8px 18px -8px rgba(0, 0, 0, 0.25);
-    transition: transform 0.5s ease 0.2s, width 0.5s ease 0.2s, height 0.5s ease 0.2s, margin 0.5s ease 0.2s, opacity 0.1s ease 0.1s, border-radius 0s;
+    transition: transform 0.5s ease 0.2s, width 0.5s ease 0.2s, height 0.5s ease 0.2s, margin 0.5s ease 0.2s, opacity 0.1s ease 0.1s, border-radius 0s;
     /* transition: all 0.5s ease 0.3s, border-radius 1ms, opacity 0.2s ease 0.1s,
       box-shadow 1ms; */ }
   .getchat-widget.getchat-widget--left-bottom {

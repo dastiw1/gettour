@@ -68,8 +68,8 @@ function isElementHidden(el) {
 function isMessageFromWidget(event) {
   // IMPORTANT: Check the origin of the data!
   if (
-    event.origin.indexOf('https://getchat.me') ||
-    event.origin.indexOf(this.options.devHost)
+    event.origin.indexOf('https://getchat.me') > -1 ||
+    event.origin.indexOf(this.options.devHost) > -1
   ) {
     // The data has been sent from your site
 
