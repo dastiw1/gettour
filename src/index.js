@@ -498,7 +498,17 @@ const onboarding = Object.assign(
         );
 
         if (widgetAvaImg && e.data.bot.style.avatar) {
-          widgetAvaImg.setAttribute('src', e.data.bot.style.avatar);
+          let host;
+
+          if (this.options.env === 'development') {
+            host = this.options.devHost;
+          } else {
+            host = 'https://getchat.me';
+          }
+
+          let avatarSrc = `${host}${e.data.bot.style.avatar}`;
+
+          widgetAvaImg.setAttribute('src', avatarSrc);
         }
       }
     },
