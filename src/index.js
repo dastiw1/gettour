@@ -61,7 +61,7 @@ function isInViewport(elem) {
   );
 }
 
-function isElementHidden(elem) {
+function isElementVisible(elem) {
   return !!(elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length);
 }
 
@@ -253,35 +253,23 @@ const onboarding = Object.assign(
           }
         });
 
-        // Слушать события выделения
-        window.addEventListener('message', event => {
-          this.__listenForHighlightRequests.call(this, event);
-        });
-
-        // Слушать события кнопок чата
-        window.addEventListener('message', event => {
-          this.__listenForActionClickedRequests.call(this, event);
-        });
-
-        // Слушать события для Observer-а
-        window.addEventListener('message', event => {
-          this.__listenForObserveRequests.call(this, event);
-        });
-
-        // Слушать события для EVALUATE для выполнения userScript
-        window.addEventListener('message', event => {
-          this.__listenForUserScriptEvaluateRequests.call(this, event);
-        });
-
-        // Слушать события наличия новых сообщении
-        window.addEventListener('message', event => {
-          this.__listenForNewMessages.call(this, event);
-        });
-
-        // Слушать события наличия новых сообщении
-        window.addEventListener('message', event => {
-          this.__listenForBotInfo.call(this, event);
-        });
+        if (!this.listenForMessages) {
+          this.listenForMessages = function (event) {
+            // Слушать события выделения
+            this.__listenForHighlightRequests.call(this, event);
+            // Слушать события кнопок чата
+            this.__listenForActionClickedRequests.call(this, event);
+            // Слушать события для Observer-а
+            this.__listenForObserveRequests.call(this, event);
+            // Слушать события для EVALUATE для выполнения userScript
+            this.__listenForUserScriptEvaluateRequests.call(this, event);
+            // Слушать события наличия новых сообщении
+            this.__listenForNewMessages.call(this, event);
+            // Слушать события подгрузки нового бота
+            this.__listenForBotInfo.call(this, event);
+          }.bind(this);
+          window.addEventListener('message', this.listenForMessages);
+        }
 
         // bla
         window.getTourEventBus.addEventListener('ConditionMatched', e => {
@@ -313,6 +301,7 @@ const onboarding = Object.assign(
 
       return this;
     },
+
     /**
      * Подгрузка виджета если попадает под одну из условии
      */
@@ -409,9 +398,9 @@ const onboarding = Object.assign(
         if (
           steps &&
           steps.length &&
-          steps.find(s => answer_id === s.highlightEventAnswerId)
+          steps.find(s => s.highlightEventAnswerId === answer_id)
         ) {
-          this.__intro.exit();
+          this.__intro.exit(true);
           this.__intro.clearSteps();
         }
       }
@@ -533,7 +522,7 @@ const onboarding = Object.assign(
 
       const el = elementsArray.find(isAnyPartOfElementInViewport);
 
-      if (!isElementHidden(el)) {
+      if (el != null && isElementVisible(el)) {
         return el;
       }
       return null;
@@ -549,7 +538,7 @@ const onboarding = Object.assign(
       const introElement = this.__getElementForHighlight(selector);
 
       if (introElement == null) {
-        showError("Element doesn't exist on DOM");
+        showError(`Element doesn't exist on DOM: ${selector}`);
         return;
       }
 
@@ -586,7 +575,7 @@ const onboarding = Object.assign(
         introElement.addEventListener(
           closeEvent,
           () => {
-            this.__intro.exit();
+            this.__intro.exit(true);
             this.__intro.clearSteps();
           },
           {
@@ -632,8 +621,10 @@ const onboarding = Object.assign(
       // this.triggeredCount = 0;
     },
     destroyWidget() {
+      // window.removeEventListener('message', this.listenForMessages);
       if (this.block) {
         this.block.remove();
+
       }
     },
     /**
