@@ -147,13 +147,16 @@ import { createPopper } from '@popperjs/core';
       }
       //for window resize
       DOMEvent.on(window, 'resize', _onResize, this, true);
-    }
-    if(_isFixed(currentItem.element)) {
-      setTimeout(() => {
-        this.refresh.call(this)
-      }, 200)
+
+      if(_isFixed(currentItem.element)) {
+        setTimeout(() => {
+          this.refresh.call(this)
+        }, 800)
+        
+      }
       
     }
+    
     return false;
   }
 
