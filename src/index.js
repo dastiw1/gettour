@@ -61,8 +61,8 @@ function isInViewport(elem) {
   );
 }
 
-function isElementHidden(el) {
-  return typeof el === 'object' && el.offsetParent === null;
+function isElementHidden(elem) {
+  return !!(elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length);
 }
 
 function isMessageFromWidget(event) {
