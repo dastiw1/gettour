@@ -24,7 +24,12 @@ export function isObject(obj) {
 
   return type === 'function' || (type === 'object' && !!obj);
 }
-
+/**
+ * Check is user device is mobile
+ */
+export function isMobileDevice() {
+  return (typeof window.orientation !== 'undefined') || (navigator.userAgent.indexOf('IEMobile') !== -1);
+}
 export function detectClientLang() {
   let lang =
     (navigator.languages && navigator.languages[0]) ||
@@ -44,7 +49,8 @@ export function detectClientLang() {
 const utils = {
   showError,
   loadCss,
-  isObject
+  isObject,
+  isMobileDevice
 };
 
 export default utils;

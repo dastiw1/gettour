@@ -11,7 +11,7 @@ import introJs from './intro-chat';
 import ChangesListener from './ChangesListener';
 import ConditionEventsListeners from './ConditionEventsListeners';
 import EventBus from './EventBus';
-import { showError, loadCss, isObject } from './utils';
+import { showError, loadCss, isObject, isMobileDevice } from './utils';
 import widgetStyles from './functions/widgetStyles';
 const widgetTemplateLoader = require('./templates/widget.mst');
 
@@ -174,7 +174,8 @@ const onboarding = Object.assign(
         env: 'production',
         preview: false,
         devHost: 'http://localhost',
-        alignment: 'left-bottom'
+        alignment: 'left-bottom',
+        mobile: true
       },
       optionsChangesHandler
     ),
@@ -199,10 +200,12 @@ const onboarding = Object.assign(
         this.options[key] = options[key];
       });
 
+      if (this.options.mobile === false && isMobileDevice()) {
+        return false;
+      }
       this.loadWidgetData().then(data => {
         this.domain = data.domain;
         this.active.status = data.widget_active;
-        this.autoShowConditions = data.conditions;
 
         // this.options = Object.assign(this.options, data.widget_options);
         if (isObject(data.widget_options)) {
@@ -210,6 +213,13 @@ const onboarding = Object.assign(
             this.options[key] = data.widget_options[key];
           });
         }
+
+        Object.keys(data.conditions).forEach(key => {
+          data.conditions[key] = Object.assign({options: {
+            alignment: this.options.alignment
+          }}, data.conditions[key]);
+        });
+        this.autoShowConditions = data.conditions;
 
         if (!this.active.status) {
           return;
@@ -255,18 +265,34 @@ const onboarding = Object.assign(
 
         if (!this.listenForMessages) {
           this.listenForMessages = function (event) {
-            // Слушать события выделения
-            this.__listenForHighlightRequests.call(this, event);
-            // Слушать события кнопок чата
-            this.__listenForActionClickedRequests.call(this, event);
-            // Слушать события для Observer-а
-            this.__listenForObserveRequests.call(this, event);
-            // Слушать события для EVALUATE для выполнения userScript
-            this.__listenForUserScriptEvaluateRequests.call(this, event);
-            // Слушать события наличия новых сообщении
-            this.__listenForNewMessages.call(this, event);
-            // Слушать события подгрузки нового бота
-            this.__listenForBotInfo.call(this, event);
+            if (isMessageFromWidget.call(this, event)) {
+              switch (event.data.action) {
+                case 'HIGHLIGHT':
+                  // Слушать события выделения
+                  this.__listenForHighlightRequests.call(this, event);
+                  break;
+                case 'ACTION_CLICKED':
+                  // Слушать события кнопок чата
+                  this.__listenForActionClickedRequests.call(this, event);
+                  break;
+                case 'OBSERVE':
+                  // Слушать события для Observer-а
+                  this.__listenForObserveRequests.call(this, event);
+                  break;
+                case 'EVALUATE':
+                  // Слушать события для EVALUATE для выполнения userScript
+                  this.__listenForUserScriptEvaluateRequests.call(this, event);
+                  break;
+                case 'NEW_MESSAGE':
+                  // Слушать события наличия новых сообщении
+                  this.__listenForNewMessages.call(this, event);
+                  break;
+                case 'BOT_DATA':
+                  // Слушать события подгрузки нового бота
+                  this.__listenForBotInfo.call(this, event);
+                  break;
+              }
+            }
           }.bind(this);
           window.addEventListener('message', this.listenForMessages);
         }
@@ -388,21 +414,16 @@ const onboarding = Object.assign(
      * @param {object} e
      */
     __listenForActionClickedRequests(e) {
-      if (
-        isMessageFromWidget.call(this, e) &&
-        e.data.action === 'ACTION_CLICKED'
-      ) {
-        const { answer_id } = e.data;
-        let { steps } = this.__intro._options;
+      const { answer_id } = e.data;
+      let { steps } = this.__intro._options;
 
-        if (
-          steps &&
-          steps.length &&
-          steps.find(s => s.highlightEventAnswerId === answer_id)
-        ) {
-          this.__intro.exit(true);
-          this.__intro.clearSteps();
-        }
+      if (
+        steps &&
+        steps.length &&
+        steps.find(s => s.highlightEventAnswerId === answer_id)
+      ) {
+        this.__intro.exit(true);
+        this.__intro.clearSteps();
       }
     },
     /**
@@ -411,20 +432,17 @@ const onboarding = Object.assign(
      */
     __listenForObserveRequests(e) {
       let { data } = e;
+      // let activeListener = this.active.listenerId;
+      let id = data.answer_id;
 
-      if (isMessageFromWidget.call(this, e) && data.action === 'OBSERVE') {
-        // let activeListener = this.active.listenerId;
-        let id = data.answer_id;
+      this.__setActiveListener(data.active_listener_id || null);
 
-        this.__setActiveListener(data.active_listener_id || null);
+      if (!this.listenersList.has(id)) {
+        let listener = new ChangesListener(data);
 
-        if (!this.listenersList.has(id)) {
-          let listener = new ChangesListener(data);
-
-          listener.tourJs = this;
-          listener.init();
-          this.__registerListener(listener);
-        }
+        listener.tourJs = this;
+        listener.init();
+        this.__registerListener(listener);
       }
     },
     /**
@@ -434,10 +452,8 @@ const onboarding = Object.assign(
     __listenForUserScriptEvaluateRequests(e) {
       let { data } = e;
 
-      if (isMessageFromWidget.call(this, e) && data.action === 'EVALUATE') {
-        // eslint-disable-next-line no-eval
-        eval(data.script);
-      }
+      // eslint-disable-next-line no-eval
+      eval(data.script);
     },
     /**
      * Добавляет экземпляр ChangesListener в список
@@ -457,23 +473,18 @@ const onboarding = Object.assign(
      * @param {object} e
      */
     __listenForNewMessages(e) {
-      if (
-        isMessageFromWidget.call(this, e) &&
-        e.data.action === 'NEW_MESSAGE'
-      ) {
-        const { value } = e.data;
-        let widget = document.querySelector('.getchat-widget');
+      const { value } = e.data;
+      let widget = document.querySelector('.getchat-widget');
 
-        if (value) {
-          if (
-            !widget.classList.contains(this.hasMsgClass) &&
-            !widget.classList.contains(this.expandClass)
-          ) {
-            widget.classList.add(this.hasMsgClass);
-          }
-        } else {
-          widget.classList.remove(this.hasMsgClass);
+      if (value) {
+        if (
+          !widget.classList.contains(this.hasMsgClass) &&
+          !widget.classList.contains(this.expandClass)
+        ) {
+          widget.classList.add(this.hasMsgClass);
         }
+      } else {
+        widget.classList.remove(this.hasMsgClass);
       }
     },
     /**
@@ -481,24 +492,22 @@ const onboarding = Object.assign(
      * @param {object} e - Event
      */
     __listenForBotInfo(e) {
-      if (isMessageFromWidget.call(this, e) && e.data.action === 'BOT_DATA') {
-        let widgetAvaImg = document.querySelector(
-          '.getchat-widget .getchat-widget__header-ava > img'
-        );
+      let widgetAvaImg = document.querySelector(
+        '.getchat-widget .getchat-widget__header-ava > img'
+      );
 
-        if (widgetAvaImg && e.data.bot.style.avatar) {
-          let host;
+      if (widgetAvaImg && e.data.bot.style.avatar) {
+        let host;
 
-          if (this.options.env === 'development') {
-            host = this.options.devHost;
-          } else {
-            host = 'https://getchat.me';
-          }
-
-          let avatarSrc = `${host}${e.data.bot.style.avatar}`;
-
-          widgetAvaImg.setAttribute('src', avatarSrc);
+        if (this.options.env === 'development') {
+          host = this.options.devHost;
+        } else {
+          host = 'https://getchat.me';
         }
+
+        let avatarSrc = `${host}${e.data.bot.style.avatar}`;
+
+        widgetAvaImg.setAttribute('src', avatarSrc);
       }
     },
     /**
@@ -506,10 +515,8 @@ const onboarding = Object.assign(
      * @param {Object} e
      */
     __listenForHighlightRequests(e) {
-      if (isMessageFromWidget.call(this, e) && e.data.action === 'HIGHLIGHT') {
-        if (e.data.selector) {
-          this.highlight(e.data);
-        }
+      if (e.data.selector) {
+        this.highlight(e.data);
       }
     },
     /**
@@ -627,6 +634,11 @@ const onboarding = Object.assign(
 
       }
     },
+    __getAlignmentValue() {
+      let uuid = this.active.condition;
+
+      return this.autoShowConditions[uuid].options.alignment;
+    },
     /**
      *
      * @param {string} chatUrl
@@ -645,7 +657,7 @@ const onboarding = Object.assign(
 
       // Указать выравнивание
       if (this.options.alignment) {
-        this.block.className += ` ${widgetClass}--${this.options.alignment}`;
+        this.block.className += ` ${widgetClass}--${this.__getAlignmentValue()}`;
       }
 
       // Указать в режиме preview или нет
