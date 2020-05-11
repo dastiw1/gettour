@@ -8,6 +8,7 @@
 import Cookies from 'js-cookie';
 
 import introJs from './intro-chat';
+import WindowStateManager from './WindowStateManager';
 import ChangesListener from './ChangesListener';
 import ConditionEventsListeners from './ConditionEventsListeners';
 import EventBus from './EventBus';
@@ -27,6 +28,13 @@ function setOptions({ options }) {
     this.__intro.setOptions(this.config);
   }
 }
+
+/* function url_domain(url) {
+  let a = document.createElement('a');
+
+  a.href = url;
+  return a.hostname;
+} */
 
 function isAnyPartOfElementInViewport(el) {
   const scroll = window.scrollY || window.pageYOffset;
@@ -324,6 +332,13 @@ const onboarding = Object.assign(
         // Слущать изменение URL
         this.listenForLocationChange();
       });
+
+      /**
+       *  Когда закрывается последняя вкладка очищать значение expand cookie
+       */
+      if (this.windowStateManager == null) {
+        this.windowStateManager = new WindowStateManager(false, function () {});
+      }
 
       return this;
     },
