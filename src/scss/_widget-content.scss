@@ -119,7 +119,8 @@
     }
     .getchat-widget__content {
       margin: -490px 0 0 -319px;
-      display: block;
+      display: flex;
+      flex-direction: column;
       width: 320px;
       height: 552px;
       border-radius: 10px 10px 0px 0px;
