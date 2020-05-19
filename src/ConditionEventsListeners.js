@@ -37,11 +37,11 @@ class ConditionEventsListeners {
     }, 1000);
 
     // TODO: make listener removable
-    if (!this.clickListenerLaunched) {
-      let listenerOptions = {
-        once: true
-      };
+    let listenerOptions = {
+      once: true
+    };
 
+    if (Object.keys(this.manualConditions).length) {
       document.addEventListener(
         'click',
         this.clickListener.bind(this),

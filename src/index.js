@@ -97,7 +97,9 @@ function isMessageFromWidget(event) {
 
 const STYLEPATH = {
   development: 'http://gettour/dist/css/styles.css',
-  production: 'https://cdn.jsdelivr.net/npm/gettour/dist/css/styles.min.css'
+  production: 'https://cdn.jsdelivr.net/npm/gettour@0.4.7/dist/css/styles.min.css'
+  /* development: 'https://cdn.jsdelivr.net/npm/gettour@0.4.6/dist/css/styles.min.css',
+  production: 'https://cdn.jsdelivr.net/npm/gettour@0.4.6/dist/css/styles.min.css' */
 };
 
 /**
@@ -233,11 +235,9 @@ const onboarding = Object.assign(
           return;
         }
         this.__intro = introJs();
-
         this.ConditionEventsListeners = new ConditionEventsListeners(
           this.autoShowConditions
         );
-
         this.ConditionEventsListeners.watchForMatch(true);
 
         this.__intro.onchange(() => {
@@ -305,24 +305,8 @@ const onboarding = Object.assign(
           window.addEventListener('message', this.listenForMessages);
         }
 
-        // bla
-        window.getTourEventBus.addEventListener('ConditionMatched', e => {
-          if (
-            e != null &&
-            this.autoShowConditions[e.detail.uuid].onClick &&
-            this.active.condition === e.detail.uuid &&
-            this.active.condition
-          ) {
-            // Если нажали на элемент вызывающий данный виджет, но виджет уже подгружен
-            if (this.block.classList.contains(this.expandClass)) {
-              this.hideBlock();
-            } else {
-              this.expandBlock();
-            }
-          } else {
-            this.loadCondition(e.detail.uuid);
-          }
-        });
+        // Подписка на событие "когда условия виджета выполнены"
+        window.getTourEventBus.addEventListener('ConditionMatched', this.conditionMatchHandler);
 
         // Если не подходит под условия
         window.getTourEventBus.addEventListener('NoMatchedConditions', e => {
@@ -343,6 +327,25 @@ const onboarding = Object.assign(
       return this;
     },
 
+    conditionMatchHandler(e) {
+      let self = window.gettour;
+
+      if (
+        e != null &&
+        self.autoShowConditions[e.detail.uuid].onClick &&
+        self.active.condition === e.detail.uuid &&
+        self.active.condition
+      ) {
+        // Если нажали на элемент вызывающий данный виджет, но виджет уже подгружен
+        if (self.block.classList.contains(self.expandClass)) {
+          self.hideBlock();
+        } else {
+          self.expandBlock();
+        }
+      } else {
+        self.loadCondition(e.detail.uuid);
+      }
+    },
     /**
      * Подгрузка виджета если попадает под одну из условии
      */
@@ -644,10 +647,11 @@ const onboarding = Object.assign(
     },
     destroyWidget() {
       // window.removeEventListener('message', this.listenForMessages);
-      if (this.block) {
-        this.block.remove();
-
+      if (this.block && this.block.parentNode) {
+        this.block.parentNode.removeChild(this.block);
       }
+      window.getTourEventBus.clearListeners();
+      window.getTourEventBus.removeEventListener('ConditionMatched', this.conditionMatchHandler);
     },
     __getAlignmentValue() {
       let uuid = this.active.condition;
