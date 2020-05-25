@@ -2,6 +2,29 @@
 
 Getchat.me onboarding tour library that works with their autochats
 
+## Events:
+Gettour event system. to subscribe/unsubscribe to events use following methods:
+
+```
+gettour.on(eventName, callback);
+gettour.off(eventName, callback);
+```
+
+To Dispatch events you can use `gettour.dispatch`:
+
+```
+gettour.dispatch('myEvent', { payloadParam1: 'payloadParam1Value' })
+```
+
+
+### List Of system events
+- opened:on-click  -  On widget expand event while user click on icon
+- opened:auto  - On automatic widget expand event
+- closed:on-click  - On hide by clicking "X" icon event
+- closed:auto  - On automatic widget hide event
+- chat-event:ga - Chatbot Google analytics event triggered
+
+
 ## Files structure
 
 CSS Files:

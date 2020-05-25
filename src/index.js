@@ -14,6 +14,7 @@ import ConditionEventsListeners from './ConditionEventsListeners';
 import EventBus from './EventBus';
 import { showError, loadCss, isObject, isMobileDevice } from './utils';
 import widgetStyles from './functions/widgetStyles';
+import DispatcherEvent from './DispatcherEvent';
 const widgetTemplateLoader = require('./templates/widget.mst');
 
 window.getTourEventBus = new EventBus();
@@ -103,7 +104,7 @@ const STYLEPATH = {
 };
 
 /**
- * Ловушка для парметров свойства options.
+ * Ловушка (Proxy) для парметров свойства options.
  */
 let optionsChangesHandler = {
   set(target, prop, val) {
@@ -161,6 +162,7 @@ const onboarding = Object.assign(
         }
       }
     },
+    events: {},
     _states: new Proxy(
       {
         isLoading: false // Boolean
@@ -214,6 +216,10 @@ const onboarding = Object.assign(
         return false;
       }
       this.loadWidgetData().then(data => {
+        if (Object.keys(data.conditions).length === 0) {
+          showError('ERROR! Widget data not recieved!');
+          return;
+        }
         this.domain = data.domain;
         this.active.status = data.widget_active;
 
@@ -298,6 +304,10 @@ const onboarding = Object.assign(
                 case 'BOT_DATA':
                   // Слушать события подгрузки нового бота
                   this.__listenForBotInfo.call(this, event);
+                  break;
+                case 'DATALAYER_PUSH':
+                  // Слушать события подгрузки нового бота
+                  this.__listenForDataLayerPushes.call(this, event);
                   break;
               }
             }
@@ -537,6 +547,12 @@ const onboarding = Object.assign(
         this.highlight(e.data);
       }
     },
+
+    __listenForDataLayerPushes(e) {
+      if (e.data.payload) {
+        this.dispatch('chat-event:ga', e.data.payload);
+      }
+    },
     /**
      *
      * @param {*} selector
@@ -706,7 +722,7 @@ const onboarding = Object.assign(
       let frame = document.querySelector('.getchat-widget__frame');
 
       frame.onload = () => {
-        if (asExpanded) {
+        if (!this.block.classList.contains(this.expandClass) && asExpanded) {
           this.expandBlock();
         }
       };
@@ -754,9 +770,9 @@ const onboarding = Object.assign(
       );
       const $launcher = document.querySelector('.getchat-widget__launcher');
 
-      $closeBtn.addEventListener('click', () => {
+      $closeBtn.addEventListener('click', (event) => {
         if (widget.classList.contains(this.expandClass)) {
-          this.hideBlock();
+          this.hideBlock(event);
         }
       });
 
@@ -764,9 +780,9 @@ const onboarding = Object.assign(
         this.showAvailableBots();
       });
 
-      $launcher.addEventListener('click', () => {
+      $launcher.addEventListener('click', (event) => {
         if (!widget.classList.contains(this.expandClass)) {
-          this.expandBlock();
+          this.expandBlock(event);
         }
       });
 
@@ -777,8 +793,9 @@ const onboarding = Object.assign(
     },
     /**
      * Скрыть основной блок
+     * @param userClickEvent null|Event
      */
-    hideBlock() {
+    hideBlock(userClickEvent = null) {
       this.block.classList.remove(this.expandClass);
       Cookies.set(this.expandCookieKey, false, {
         expires: 2147483647
@@ -787,15 +804,28 @@ const onboarding = Object.assign(
       setTimeout(() => {
         this.__intro.exit();
       }, 500);
+
+      if (userClickEvent != null) {
+        this.dispatch('closed:on-click', userClickEvent);
+      } else {
+        this.dispatch('closed:auto', userClickEvent);
+      }
     },
     /**
      * Расскрыть основной блок
+     * @param userClickEvent null|Event
      */
-    expandBlock() {
+    expandBlock(userClickEvent = null) {
       this.block.classList.add(this.expandClass);
       Cookies.set(this.expandCookieKey, true, {
         expires: 2147483647
       });
+
+      if (userClickEvent != null) {
+        this.dispatch('opened:on-click', userClickEvent);
+      } else {
+        this.dispatch('opened:auto', userClickEvent);
+      }
     },
     startLoading() {
       this._states.isLoading = true;
@@ -875,6 +905,38 @@ const onboarding = Object.assign(
             reject(error);
           });
       });
+    },
+
+    /* ======================================================
+    ==================  EVENT SYSTEM METHODS  ===============
+    ========================================================= */
+    dispatch(eventName, data) {
+      const event = this.events[eventName];
+
+      if (event) {
+        event.fire(data);
+      }
+    },
+
+    on(eventName, callback) {
+      let event = this.events[eventName];
+
+      if (!event) {
+        event = new DispatcherEvent(eventName);
+        this.events[eventName] = event;
+      }
+      event.registerCallback(callback);
+    },
+
+    off(eventName, callback) {
+      const event = this.events[eventName];
+
+      if (event && event.callbacks.indexOf(callback) > -1) {
+        event.unregisterCallback(callback);
+        if (event.callbacks.length === 0) {
+          delete this.events[eventName];
+        }
+      }
     }
   },
   widgetStyles
