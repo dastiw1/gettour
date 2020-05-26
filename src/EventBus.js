@@ -1,3 +1,4 @@
+import { showError } from './utils';
 export default class EventBus {
   /**
    * Initialize a new event bus instance.
@@ -32,6 +33,10 @@ export default class EventBus {
   clearListeners() {
     let newBus = this.bus.cloneNode(true);
 
-    this.busParent.replaceChild(newBus, this.bus);
+    try {
+      this.busParent.replaceChild(newBus, this.bus);
+    } catch (error) {
+      showError(`[Error in EventBus.clearListeners method] ${error.message}`);
+    }
   }
 }

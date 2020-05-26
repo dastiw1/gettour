@@ -237,7 +237,7 @@ const onboarding = Object.assign(
         });
         this.autoShowConditions = data.conditions;
 
-        if (!this.active.status) {
+        if (!this.active.status && Object.keys(this.autoShowConditions).includes(this.active.condition)) {
           return;
         }
         this.__intro = introJs();
