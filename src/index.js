@@ -369,7 +369,7 @@ const onboarding = Object.assign(
 
       if (this.active.condition) {
         let oldVal = Cookies.get(this.expandCookieKey);
-        let asExpanded = oldVal === 'true';
+        let asExpanded = (oldVal === 'true') || typeof oldVal === 'undefined';
 
         if (this.autoShowConditions[this.active.condition] == null) {
           console.error('Attempt to load incorrect action uuid: ' + uuid);
