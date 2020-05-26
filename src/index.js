@@ -661,13 +661,15 @@ const onboarding = Object.assign(
       this.destroyWidget();
       // this.triggeredCount = 0;
     },
-    destroyWidget() {
+    destroyWidget(removeOldListeners = false) {
       // window.removeEventListener('message', this.listenForMessages);
       if (this.block && this.block.parentNode) {
         this.block.parentNode.removeChild(this.block);
       }
       window.getTourEventBus.clearListeners();
-      window.getTourEventBus.removeEventListener('ConditionMatched', this.conditionMatchHandler);
+      if (removeOldListeners) {
+        window.getTourEventBus.removeEventListener('ConditionMatched', this.conditionMatchHandler);
+      }
     },
     __getAlignmentValue() {
       let uuid = this.active.condition;
