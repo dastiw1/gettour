@@ -149,6 +149,7 @@ const onboarding = Object.assign(
     expandClass: 'getchat-widget--expanded',
     loadingClass: 'getchat-widget--loading',
     hasMsgClass: 'getchat-widget--has-msgs',
+    overlayClass: 'getchat-widget__overlay',
     expandCookieKey: 'gw-state',
     active: {
       status: false,
@@ -266,16 +267,17 @@ const onboarding = Object.assign(
             closeBtn.style.display = 'none';
           }
         });
+        if (!this.options.hideCloseButton) {
+          this.__intro.onexit(() => {
+            const closeBtn = document.querySelector(
+              '.getchat-widget > .getchat-widget__btn--icon'
+            );
 
-        this.__intro.onexit(() => {
-          const closeBtn = document.querySelector(
-            '.getchat-widget > .getchat-widget__btn--icon'
-          );
-
-          if (closeBtn) {
-            closeBtn.style.display = 'inline-flex';
-          }
-        });
+            if (closeBtn) {
+              closeBtn.style.display = 'inline-flex';
+            }
+          });
+        }
 
         if (!this.listenForMessages) {
           this.listenForMessages = function (event) {
@@ -662,11 +664,17 @@ const onboarding = Object.assign(
       // this.triggeredCount = 0;
     },
     destroyWidget(removeOldListeners = false) {
-      // window.removeEventListener('message', this.listenForMessages);
+      // remove main widget block el from DOM
       if (this.block && this.block.parentNode) {
         this.block.parentNode.removeChild(this.block);
       }
+      // remove overlay element from DOM
+      if (this.overlay) {
+        this.overlay.parentNode.removeChild(this.overlay);
+      }
+      // stop and clean listeners
       window.getTourEventBus.clearListeners();
+
       if (removeOldListeners) {
         window.getTourEventBus.removeEventListener('ConditionMatched', this.conditionMatchHandler);
       }
@@ -706,12 +714,16 @@ const onboarding = Object.assign(
       if (this.options.style.color) {
         styles.header = `background: ${this.options.style.color}`;
       }
+      // Другие опции:
+      let { showOverlay, hideCloseButton } = this.options;
 
       (() => (new Image().src = chatUrl))();
 
       const vars = {
         widgetUrl: chatUrl,
         asExpanded,
+        showOverlay,
+        hideCloseButton,
         styles
       };
 
@@ -720,15 +732,30 @@ const onboarding = Object.assign(
       this.block.innerHTML = widgetHtml;
 
       document.body.appendChild(this.block);
+      // appending overlay
+      let overlay = document.getElementsByClassName(this.overlayClass);
+
+      if (overlay != null) {
+        overlay = document.createElement('div');
+        overlay.className = this.overlayClass;
+        document.body.appendChild(overlay);
+      }
+      this.overlay = overlay;
+
+      if (showOverlay) {
+        overlay.style.display = 'block';
+      }
 
       let frame = document.querySelector('.getchat-widget__frame');
 
+      // Авторасскрытие
       frame.onload = () => {
         if (!this.block.classList.contains(this.expandClass) && asExpanded) {
           this.expandBlock();
         }
       };
 
+      // запуск слушателей
       this.initSystemEventListeners();
     },
     /**
@@ -764,23 +791,28 @@ const onboarding = Object.assign(
      */
     initSystemEventListeners() {
       const widget = document.querySelector('.getchat-widget');
+
+      if (!this.options.hideCloseButton) {
+        const $closeBtn = document.querySelector(
+          '.getchat-widget__btn--action-close'
+        );
+
+        $closeBtn.addEventListener('click', (event) => {
+          if (widget.classList.contains(this.expandClass)) {
+            this.hideBlock(event);
+          }
+        });
+      }
+
       const $menuBtn = document.querySelector(
         '.getchat-widget__btn--action-menu'
       );
-      const $closeBtn = document.querySelector(
-        '.getchat-widget__btn--action-close'
-      );
-      const $launcher = document.querySelector('.getchat-widget__launcher');
-
-      $closeBtn.addEventListener('click', (event) => {
-        if (widget.classList.contains(this.expandClass)) {
-          this.hideBlock(event);
-        }
-      });
 
       $menuBtn.addEventListener('click', () => {
         this.showAvailableBots();
       });
+
+      const $launcher = document.querySelector('.getchat-widget__launcher');
 
       $launcher.addEventListener('click', (event) => {
         if (!widget.classList.contains(this.expandClass)) {
@@ -798,7 +830,11 @@ const onboarding = Object.assign(
      * @param userClickEvent null|Event
      */
     hideBlock(userClickEvent = null) {
+      // hide widget window
       this.block.classList.remove(this.expandClass);
+      // hide overlay
+      this.overlay.style.display = 'none';
+      // expand cookie
       Cookies.set(this.expandCookieKey, false, {
         expires: 2147483647
       });
@@ -818,7 +854,13 @@ const onboarding = Object.assign(
      * @param userClickEvent null|Event
      */
     expandBlock(userClickEvent = null) {
+      // show widget window
       this.block.classList.add(this.expandClass);
+      // show overlay
+      if (this.options.showOverlay) {
+        this.overlay.style.display = 'block';
+      }
+
       Cookies.set(this.expandCookieKey, true, {
         expires: 2147483647
       });

@@ -4,9 +4,11 @@
       <div class="getchat-widget__header-ava"><img src="/img/unknown_ava.jpg" alt="widget avatar"></div>
       <div class="getchat-widget__header-actions">
         <div class="getchat-widget__btn getchat-widget__btn--action-menu getchat-widget__btn--icon"></div>
+        {{^hideCloseButton}}
         <div class="getchat-widget__btn getchat-widget__btn--action-close getchat-widget__btn--icon">
           <i aria-hidden="true" class="getchat-widget__icon--close"></i>
         </div>
+        {{/hideCloseButton}}
       </div>
     </div>
     <iframe src="{{ widgetUrl }}" class="getchat-widget__frame" onload="gettour.stopLoading()"></iframe>
