@@ -669,7 +669,7 @@ const onboarding = Object.assign(
         this.block.parentNode.removeChild(this.block);
       }
       // remove overlay element from DOM
-      if (this.overlay) {
+      if (this.overlay && this.overlay.parentNode) {
         this.overlay.parentNode.removeChild(this.overlay);
       }
       // stop and clean listeners
