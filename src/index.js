@@ -156,10 +156,12 @@ const onboarding = Object.assign(
       listenerId: null,
       condition: {
         get() {
-          return this.ConditionEventsListeners.active;
+          return this.ConditionEventsListeners ? this.ConditionEventsListeners.active : null;
         },
         set(val) {
-          this.ConditionEventsListeners.active = val;
+          if (this.ConditionEventsListeners) {
+            this.ConditionEventsListeners.active = val;
+          }
         }
       }
     },
@@ -675,6 +677,10 @@ const onboarding = Object.assign(
       // stop and clean listeners
       window.getTourEventBus.clearListeners();
 
+      this.active.status = false;
+      this.active.condition = false;
+      this.block = null;
+
       if (removeOldListeners) {
         window.getTourEventBus.removeEventListener('ConditionMatched', this.conditionMatchHandler);
       }
@@ -830,6 +836,12 @@ const onboarding = Object.assign(
      * @param userClickEvent null|Event
      */
     hideBlock(userClickEvent = null) {
+      // Передем в чат сообщение о состояний раскрытия виджета
+      this.sendMessage(
+        { expanded: false },
+        'expandStatus',
+        false
+      );
       // hide widget window
       this.block.classList.remove(this.expandClass);
       // hide overlay
@@ -848,6 +860,7 @@ const onboarding = Object.assign(
       } else {
         this.dispatch('closed:auto', userClickEvent);
       }
+
     },
     /**
      * Расскрыть основной блок
@@ -870,6 +883,14 @@ const onboarding = Object.assign(
       } else {
         this.dispatch('opened:auto', userClickEvent);
       }
+      setTimeout(() => {
+        // Передем в чат сообщение о состояний раскрытия виджета
+        this.sendMessage(
+          { expanded: true },
+          'expandStatus',
+          false
+        );
+      }, 1000);
     },
     startLoading() {
       this._states.isLoading = true;
