@@ -675,7 +675,9 @@ const onboarding = Object.assign(
         this.overlay.parentNode.removeChild(this.overlay);
       }
       // stop and clean listeners
-      window.getTourEventBus.clearListeners();
+      if (window.getTourEventBus.clearListeners) {
+        window.getTourEventBus.clearListeners();
+      }
 
       this.active.status = false;
       this.active.condition = false;
@@ -688,7 +690,10 @@ const onboarding = Object.assign(
     __getAlignmentValue() {
       let uuid = this.active.condition;
 
-      return this.autoShowConditions[uuid].options.alignment;
+      if (uuid) {
+        return this.autoShowConditions[uuid].options.alignment;
+      }
+      return 'right-bottom';
     },
     /**
      *
