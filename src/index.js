@@ -207,9 +207,7 @@ const onboarding = Object.assign(
      * @param {object} options
      */
     init(hash, options = {}) {
-      const self = this;
 
-      this.hash = hash;
       // this.options = Object.assign(this.options, options);
       Object.keys(options).forEach(key => {
         this.options[key] = options[key];
@@ -218,7 +216,28 @@ const onboarding = Object.assign(
       if (this.options.mobile === false && isMobileDevice()) {
         return false;
       }
-      this.loadWidgetData().then(data => {
+      if (this.hash !== hash) {
+        this.hash = hash;
+        this.loadWidgetData().then(data => {
+          this.startInitialize(data);
+        });
+      } else {
+        this.startInitialize();
+      }
+
+      /**
+       *  Когда закрывается последняя вкладка очищать значение expand cookie
+       */
+      if (this.windowStateManager == null) {
+        this.windowStateManager = new WindowStateManager(false, function () {});
+      }
+
+      return this;
+    },
+    startInitialize(data = null) {
+      const self = this;
+
+      if (data !== null) {
         if (Object.keys(data.conditions).length === 0) {
           showError('ERROR! Widget data not recieved!');
           return;
@@ -239,106 +258,97 @@ const onboarding = Object.assign(
           }}, data.conditions[key]);
         });
         this.autoShowConditions = data.conditions;
+      }
 
-        if (!this.active.status && Object.keys(this.autoShowConditions).includes(this.active.condition)) {
-          return;
+      if (!this.active.status && Object.keys(this.autoShowConditions).includes(this.active.condition)) {
+        return;
+      }
+      this.__intro = introJs();
+      this.ConditionEventsListeners = new ConditionEventsListeners(
+        this.autoShowConditions
+      );
+      this.ConditionEventsListeners.watchForMatch(true);
+
+      this.__intro.onchange(() => {
+        self.__intro.refresh();
+        return this;
+      });
+      this.__intro.onbeforechange(() => {
+        if (this.__intro._introItems.length) {
+          const step = this.__intro._introItems[0];
+
+          self.setOptions(step);
         }
-        this.__intro = introJs();
-        this.ConditionEventsListeners = new ConditionEventsListeners(
-          this.autoShowConditions
+
+        //
+        const closeBtn = document.querySelector(
+          '.getchat-widget > .getchat-widget__btn--icon'
         );
-        this.ConditionEventsListeners.watchForMatch(true);
 
-        this.__intro.onchange(() => {
-          self.__intro.refresh();
-          return this;
-        });
-        this.__intro.onbeforechange(() => {
-          if (this.__intro._introItems.length) {
-            const step = this.__intro._introItems[0];
-
-            self.setOptions(step);
-          }
-
-          //
+        if (closeBtn) {
+          closeBtn.style.display = 'none';
+        }
+      });
+      if (!this.options.hideCloseButton) {
+        this.__intro.onexit(() => {
           const closeBtn = document.querySelector(
             '.getchat-widget > .getchat-widget__btn--icon'
           );
 
           if (closeBtn) {
-            closeBtn.style.display = 'none';
+            closeBtn.style.display = 'inline-flex';
           }
         });
-        if (!this.options.hideCloseButton) {
-          this.__intro.onexit(() => {
-            const closeBtn = document.querySelector(
-              '.getchat-widget > .getchat-widget__btn--icon'
-            );
-
-            if (closeBtn) {
-              closeBtn.style.display = 'inline-flex';
-            }
-          });
-        }
-
-        if (!this.listenForMessages) {
-          this.listenForMessages = function (event) {
-            if (isMessageFromWidget.call(this, event)) {
-              switch (event.data.action) {
-                case 'HIGHLIGHT':
-                  // Слушать события выделения
-                  this.__listenForHighlightRequests.call(this, event);
-                  break;
-                case 'ACTION_CLICKED':
-                  // Слушать события кнопок чата
-                  this.__listenForActionClickedRequests.call(this, event);
-                  break;
-                case 'OBSERVE':
-                  // Слушать события для Observer-а
-                  this.__listenForObserveRequests.call(this, event);
-                  break;
-                case 'EVALUATE':
-                  // Слушать события для EVALUATE для выполнения userScript
-                  this.__listenForUserScriptEvaluateRequests.call(this, event);
-                  break;
-                case 'NEW_MESSAGE':
-                  // Слушать события наличия новых сообщении
-                  this.__listenForNewMessages.call(this, event);
-                  break;
-                case 'BOT_DATA':
-                  // Слушать события подгрузки нового бота
-                  this.__listenForBotInfo.call(this, event);
-                  break;
-                case 'DATALAYER_PUSH':
-                  // Слушать события подгрузки нового бота
-                  this.__listenForDataLayerPushes.call(this, event);
-                  break;
-              }
-            }
-          }.bind(this);
-          window.addEventListener('message', this.listenForMessages);
-        }
-
-        // Подписка на событие "когда условия виджета выполнены"
-        window.getTourEventBus.addEventListener('ConditionMatched', this.conditionMatchHandler);
-
-        // Если не подходит под условия
-        window.getTourEventBus.addEventListener('NoMatchedConditions', e => {
-          this.reset();
-        });
-
-        // Слущать изменение URL
-        this.listenForLocationChange();
-      });
-
-      /**
-       *  Когда закрывается последняя вкладка очищать значение expand cookie
-       */
-      if (this.windowStateManager == null) {
-        this.windowStateManager = new WindowStateManager(false, function () {});
       }
 
-      return this;
+      if (!this.listenForMessages) {
+        this.listenForMessages = function (event) {
+          if (isMessageFromWidget.call(this, event)) {
+            switch (event.data.action) {
+              case 'HIGHLIGHT':
+                // Слушать события выделения
+                this.__listenForHighlightRequests.call(this, event);
+                break;
+              case 'ACTION_CLICKED':
+                // Слушать события кнопок чата
+                this.__listenForActionClickedRequests.call(this, event);
+                break;
+              case 'OBSERVE':
+                // Слушать события для Observer-а
+                this.__listenForObserveRequests.call(this, event);
+                break;
+              case 'EVALUATE':
+                // Слушать события для EVALUATE для выполнения userScript
+                this.__listenForUserScriptEvaluateRequests.call(this, event);
+                break;
+              case 'NEW_MESSAGE':
+                // Слушать события наличия новых сообщении
+                this.__listenForNewMessages.call(this, event);
+                break;
+              case 'BOT_DATA':
+                // Слушать события подгрузки нового бота
+                this.__listenForBotInfo.call(this, event);
+                break;
+              case 'DATALAYER_PUSH':
+                // Слушать события подгрузки нового бота
+                this.__listenForDataLayerPushes.call(this, event);
+                break;
+            }
+          }
+        }.bind(this);
+        window.addEventListener('message', this.listenForMessages);
+      }
+
+      // Подписка на событие "когда условия виджета выполнены"
+      window.getTourEventBus.addEventListener('ConditionMatched', this.conditionMatchHandler);
+
+      // Если не подходит под условия
+      window.getTourEventBus.addEventListener('NoMatchedConditions', e => {
+        this.reset();
+      });
+
+      // Слущать изменение URL
+      this.listenForLocationChange();
     },
 
     conditionMatchHandler(e) {
@@ -346,6 +356,7 @@ const onboarding = Object.assign(
 
       if (
         e != null &&
+        self.autoShowConditions[e.detail.uuid] &&
         self.autoShowConditions[e.detail.uuid].onClick &&
         self.active.condition === e.detail.uuid &&
         self.active.condition

@@ -101,10 +101,10 @@ class ConditionEventsListeners {
 
       if (prevPath !== path && localesMathed && this.matchDate(cond)) {
         if (this.active !== uuid) {
+          this.active = uuid;
           window.getTourEventBus.dispatchEvent('ConditionMatched', {
             uuid
           });
-          this.active = uuid;
           Cookies.set(pathKey, path);
           clearInterval(this.interval);
           return;
