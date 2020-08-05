@@ -928,7 +928,7 @@ const onboarding = Object.assign(
         let answer_id =
           Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
 
-        const { bot_id, name, start } = this.autoShowConditions[uuid];
+        const { bot_id, name, lang, start } = this.autoShowConditions[uuid];
 
         return {
           answer: {
@@ -937,6 +937,10 @@ const onboarding = Object.assign(
             listener_id: start,
             text: name,
             type: 'botLoader'
+          },
+          bot: {
+            id: bot_id,
+            lang
           },
           type: 'actionAnswer'
         };
