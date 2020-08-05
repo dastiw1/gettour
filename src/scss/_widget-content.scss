@@ -95,7 +95,7 @@
     }
   }
 
-  /* Small devices (landscape phones, 768px and up) */
+  /* Centered widget on Small devices (landscape phones, 768px and up) */
   @media (min-width: 768px) {
     &.getchat-widget--middle-center {
       .getchat-widget__content {
@@ -110,6 +110,39 @@
       }
     }
   }
+
+  /* Centered widget on Small desktops */
+  @media (min-width: 960px) {
+    &.getchat-widget--middle-center {
+      .getchat-widget__content {
+        width: 820px;
+        height: 600px;
+        overflow: hidden;
+        border-radius: 20px;
+      }
+      .getchat-widget__frame {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+  @media (min-width: 1264px) {
+    &.getchat-widget--middle-center {
+      .getchat-widget__content {
+        width: 870px;
+        height: 700px;
+        overflow: hidden;
+        border-radius: 20px;
+      }
+      .getchat-widget__frame {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+
+
+
   /**
   * Expanded
   */

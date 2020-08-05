@@ -5,6 +5,8 @@
 /* global document */
 /* global history */
 
+const PACKAGE = require('../package.json');
+
 import Cookies from 'js-cookie';
 
 import introJs from './intro-chat';
@@ -16,6 +18,8 @@ import { showError, loadCss, isObject, isMobileDevice } from './utils';
 import widgetStyles from './functions/widgetStyles';
 import DispatcherEvent from './DispatcherEvent';
 const widgetTemplateLoader = require('./templates/widget.mst');
+
+const VERSION = PACKAGE.version;
 
 window.getTourEventBus = new EventBus();
 /**
@@ -96,11 +100,10 @@ function isMessageFromWidget(event) {
   return false;
 }
 
+const CDN_BASEPATH = 'https://cdn.jsdelivr.net/npm/gettour';
 const STYLEPATH = {
   development: 'http://gettour/dist/css/styles.css',
-  production: 'https://cdn.jsdelivr.net/npm/gettour@0.4.7/dist/css/styles.min.css'
-  /* development: 'https://cdn.jsdelivr.net/npm/gettour@0.4.6/dist/css/styles.min.css',
-  production: 'https://cdn.jsdelivr.net/npm/gettour@0.4.6/dist/css/styles.min.css' */
+  production: `${CDN_BASEPATH}@${VERSION}/dist/css/styles.min.css`
 };
 
 /**
