@@ -757,6 +757,9 @@ const onboarding = Object.assign(
       this.block.innerHTML = widgetHtml;
 
       document.body.appendChild(this.block);
+
+      let frame = document.querySelector('.getchat-widget__frame');
+
       // appending overlay
       let overlay = document.getElementsByClassName(this.overlayClass);
 
@@ -766,17 +769,14 @@ const onboarding = Object.assign(
         document.body.appendChild(overlay);
       }
       this.overlay = overlay;
-
-      if (showOverlay) {
-        overlay.style.display = 'block';
-      }
-
-      let frame = document.querySelector('.getchat-widget__frame');
-
       // Авторасскрытие
       frame.onload = () => {
         if (!this.block.classList.contains(this.expandClass) && asExpanded) {
           this.expandBlock();
+
+          if (showOverlay) {
+            overlay.style.display = 'block';
+          }
         }
       };
 
